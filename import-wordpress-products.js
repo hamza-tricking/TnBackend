@@ -523,7 +523,7 @@ const convertWordPressProduct = (wpProduct) => {
         type: wpProduct.type || 'simple',
         variations: wpProduct.variations || [],
         images: images,
-        isActive: true,
+        isActive: true, // Explicitly set to true
         featured: false,
         stock: 100, // Default stock
         sku: `TN-${wpProduct.id}`, // Generate SKU from WordPress ID
