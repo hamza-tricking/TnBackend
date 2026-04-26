@@ -3,7 +3,7 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // Create new order
 router.post('/', auth, [
