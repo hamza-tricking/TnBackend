@@ -539,7 +539,16 @@ const convertWordPressProduct = (wpProduct) => {
 const importProducts = async () => {
     try {
         // Connect to MongoDB
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping');
+        let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
+        
+        // Fix truncated database name if needed
+        if (mongoUri.includes('/Tn>')) {
+            mongoUri = mongoUri.replace('/Tn>', '/tn-shopping');
+            console.log('🔧 Fixed truncated database name in URI');
+        }
+        
+        console.log('🔗 Import script connecting to MongoDB with URI:', mongoUri);
+        await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');
         
         // Clear existing products (optional)

@@ -23,7 +23,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
+let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
+
+// Fix truncated database name if needed
+if (mongoUri.includes('/Tn>')) {
+    mongoUri = mongoUri.replace('/Tn>', '/tn-shopping');
+    console.log('🔧 Fixed truncated database name in URI');
+}
+
 console.log('🔗 Connecting to MongoDB with URI:', mongoUri);
 mongoose.connect(mongoUri)
 .then(() => console.log('MongoDB connected successfully'))
