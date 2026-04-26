@@ -13,7 +13,7 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://dmtart.pro'],
+  origin: ['http://localhost:3000', 'https://dmtart.pro', 'https://tn-seven.vercel.app', 'https://tn-4k58ezjei-benchadimohamedhamza-8679s-projects.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
