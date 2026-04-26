@@ -26,8 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
 
 // Fix truncated database name if needed
-if (mongoUri.includes('/Tn>')) {
-    mongoUri = mongoUri.replace('/Tn>', '/tn-shopping');
+if (mongoUri.includes('/tn-shopping>')) {
+    mongoUri = mongoUri.replace('/tn-shopping>', '/tn-shopping');
     console.log('🔧 Fixed truncated database name in URI');
 }
 
