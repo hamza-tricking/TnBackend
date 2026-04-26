@@ -6,12 +6,24 @@ const Product = require('../models/Product');
 // Get all products with pagination and filtering
 router.get('/', async (req, res) => {
   try {
+    console.log('📥 GET /api/products - Query params:', req.query); // Debug log
+    console.log('📥 GET /api/products - Database:', mongoose.connection.name); // Debug log
+    
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
     // Build filter object
     const filter = { isActive: true };
+    
+    if (req.query.database) {
+      // Use specific database if requested
+      const dbName = req.query.database;
+      if (dbName && mongoose.connection.name !== dbName) {
+        await mongoose.connection.close();
+        await mongoose.connect(process.env.MONGODB_URI.replace(/\/[^\/]+$/, `/${dbName}`));
+      }
+    }
     
     if (req.query.category) {
       filter.category = req.query.category;
@@ -32,13 +44,18 @@ router.get('/', async (req, res) => {
     if (req.query.featured === 'true') {
       filter.featured = true;
     }
-
+    
+    console.log('📥 GET /api/products - Filter:', filter); // Debug log
+    
     const products = await Product.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
     
     const total = await Product.countDocuments(filter);
+    
+    console.log('📥 GET /api/products - Found products:', products.length); // Debug log
+    console.log('📥 GET /api/products - Sample product:', products[0]); // Debug log
     
     res.json({
       products,
