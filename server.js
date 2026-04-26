@@ -23,7 +23,9 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping')
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
+console.log('🔗 Connecting to MongoDB with URI:', mongoUri);
+mongoose.connect(mongoUri)
 .then(() => console.log('MongoDB connected successfully'))
 .catch((err) => console.error('MongoDB connection error:', err));
 
