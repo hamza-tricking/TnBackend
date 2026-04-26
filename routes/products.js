@@ -11,12 +11,7 @@ router.get('/', async (req, res) => {
     const skip = (page - 1) * limit;
     
     // Build filter object
-    let filter = { isActive: true };
-    
-    // Include inactive products if requested
-    if (req.query.includeInactive === 'true') {
-      filter = {}; // No filter - get all products
-    }
+    const filter = { isActive: true };
     
     if (req.query.category) {
       filter.category = req.query.category;
