@@ -228,4 +228,34 @@ router.put('/:id/cancel', auth, async (req, res) => {
   }
 });
 
+// Get all orders (admin only)
+router.get('/', auth, adminAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const orders = await Order.find({})
+      .populate('user', 'username email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Order.countDocuments({});
+
+    res.json({
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get all orders error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

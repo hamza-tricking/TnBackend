@@ -49,7 +49,8 @@ router.post('/register', [
 
 // Login user
 router.post('/login', [
-  body('email').isEmail().withMessage('Please enter a valid email'),
+  body('email').optional().isEmail().withMessage('Please enter a valid email'),
+  body('username').optional().isLength({ min: 3 }).withMessage('Username must be at least 3 characters long'),
   body('password').notEmpty().withMessage('Password is required')
 ], async (req, res) => {
   try {
@@ -58,10 +59,15 @@ router.post('/login', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { email, username, password } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Find user by email or username
+    const user = await User.findOne({ 
+      $or: [
+        { email: email },
+        { username: username }
+      ]
+    });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
