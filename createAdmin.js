@@ -6,18 +6,25 @@ const User = require('./models/User');
 const createAdminUser = async () => {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI , {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    let mongoUri = process.env.MONGODB_URI || 'mongodb+srv://hamzatricks:hamzatricks@cluster0.sjxud.mongodb.net/tn-shopping';
+    
+    // Fix truncated database name if needed
+    if (mongoUri.includes('/tn-shopping>')) {
+        mongoUri = mongoUri.replace('/tn-shopping>', '/tn-shopping');
+        console.log('🔧 Fixed truncated database name in URI');
+    }
+    
+    console.log('🔗 Connecting to MongoDB with URI:', mongoUri);
+    await mongoose.connect(mongoUri);
     
     console.log('Connected to MongoDB');
 
-    // Check if admin user already exists
+    // Delete existing admin user if it exists
     const existingAdmin = await User.findOne({ username: 'tnshoppingg' });
     if (existingAdmin) {
-      console.log('Admin user already exists!');
-      process.exit(0);
+      console.log('Deleting existing admin user...');
+      await User.deleteOne({ username: 'tnshoppingg' });
+      console.log('Existing admin user deleted!');
     }
 
     // Create admin user
