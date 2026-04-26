@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
-const Product = require('../../models/Product');
+const Product = require('../models/Product');
 
 // Get all products with pagination and filtering
 router.get('/', async (req, res) => {
