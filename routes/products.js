@@ -17,14 +17,8 @@ router.get('/', async (req, res) => {
     // Build filter object
     const filter = { isActive: true };
     
-    if (req.query.database) {
-      // Use specific database if requested
-      const dbName = req.query.database;
-      if (dbName && mongoose.connection.name !== dbName) {
-        await mongoose.connection.close();
-        await mongoose.connect(process.env.MONGODB_URI.replace(/\/[^\/]+$/, `/${dbName}`));
-      }
-    }
+    // Database switching removed - using default connection
+    console.log('📥 Using database:', mongoose.connection.name);
     
     if (req.query.category) {
       filter.category = req.query.category;
