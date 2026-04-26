@@ -42,6 +42,10 @@ router.get('/', async (req, res) => {
     
     console.log('📥 GET /api/products - Filter:', filter); // Debug log
     
+    // First, check if any products exist at all
+    const allProducts = await Product.find({});
+    console.log('📥 Total products in database:', allProducts.length);
+    
     const products = await Product.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
