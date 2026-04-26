@@ -538,8 +538,8 @@ const convertWordPressProduct = (wpProduct) => {
 // Main import function
 const importProducts = async () => {
     try {
-        // Connect to MongoDB
-        let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
+        // Connect to MongoDB - Force Atlas connection for production
+        let mongoUri = process.env.MONGODB_URI || 'mongodb+srv://hamzatricks:hamzatricks@cluster0.sjxud.mongodb.net/tn-shopping';
         
         // Fix truncated database name if needed
         if (mongoUri.includes('/Tn>')) {
