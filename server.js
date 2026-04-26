@@ -30,6 +30,15 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shoppi
 .then(() => console.log('MongoDB connected successfully'))
 .catch((err) => console.error('MongoDB connection error:', err));
 
+// Preflight request handler
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.status(200).send();
+});
+
 // Routes
 app.get('/', (req, res) => {
   res.json({ message: 'TN Backend API is running!' });
