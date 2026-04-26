@@ -45,6 +45,13 @@ router.get('/', async (req, res) => {
     // First, check if any products exist at all
     const allProducts = await Product.find({});
     console.log('📥 Total products in database:', allProducts.length);
+    if (allProducts.length > 0) {
+      console.log('📥 Sample product structure:', JSON.stringify(allProducts[0], null, 2));
+    }
+    
+    // Check what products match the filter
+    const filteredProducts = await Product.find(filter);
+    console.log('📥 Products matching filter (isActive: true):', filteredProducts.length);
     
     const products = await Product.find(filter)
       .sort({ createdAt: -1 })
