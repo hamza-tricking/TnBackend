@@ -137,6 +137,57 @@ router.put('/', async (req, res) => {
   }
 });
 
+// Helper function to extract Cloudinary public_id from URL
+function getPublicIdFromUrl(url) {
+  if (!url || !url.includes('cloudinary')) return null;
+  
+  // Extract public_id from Cloudinary URL
+  // Example: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/public_id.jpg
+  const matches = url.match(/\/upload\/v\d+\/(.+?)(?:\.[^.]+)?$/);
+  return matches ? matches[1] : null;
+}
+
+// Helper function to delete Cloudinary resource
+async function deleteFromCloudinary(publicId, resourceType = 'image') {
+  if (!cloudinary || !publicId) return false;
+  
+  try {
+    const result = await cloudinary.uploader.destroy(publicId, { 
+      resource_type: resourceType 
+    });
+    console.log(`Deleted ${resourceType}:`, publicId, result);
+    return result.result === 'ok' || result.result === 'not found';
+  } catch (error) {
+    console.error('Error deleting from Cloudinary:', error);
+    return false;
+  }
+}
+
+// Delete previous images/videos
+router.post('/cleanup', async (req, res) => {
+  try {
+    const { urls } = req.body;
+    if (!urls || !Array.isArray(urls)) {
+      return res.status(400).json({ message: 'Invalid URLs array' });
+    }
+
+    const results = [];
+    for (const url of urls) {
+      const publicId = getPublicIdFromUrl(url);
+      if (publicId) {
+        const resourceType = url.includes('/video/') ? 'video' : 'image';
+        const deleted = await deleteFromCloudinary(publicId, resourceType);
+        results.push({ url, publicId, deleted });
+      }
+    }
+
+    res.json({ message: 'Cleanup completed', results });
+  } catch (error) {
+    console.error('Error during cleanup:', error);
+    res.status(500).json({ message: 'Cleanup failed', error: error.message });
+  }
+});
+
 // Upload images/videos for home content
 router.post('/upload', upload.array('files', 10), async (req, res) => {
   try {
