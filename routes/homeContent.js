@@ -66,6 +66,9 @@ router.get('/', async (req, res) => {
   try {
     let homeContent = await HomeContent.findOne();
     
+    console.log('=== HOME CONTENT DATA ===');
+    console.log('Found home content:', homeContent ? 'Yes' : 'No');
+    
     // If no content exists, create default content
     if (!homeContent) {
       homeContent = new HomeContent({
@@ -106,6 +109,47 @@ router.get('/', async (req, res) => {
       await homeContent.save();
     }
     
+    // Log the complete home content data
+    console.log('Hero Slides:', homeContent.heroSlides?.length || 0);
+    console.log('About Us:', homeContent.aboutUs ? 'Present' : 'Missing');
+    console.log('Videos:', homeContent.videos?.length || 0);
+    console.log('Suggested Products:', homeContent.suggestedProducts?.length || 0);
+    console.log('Reels:', homeContent.reels?.length || 0);
+    console.log('Reviews:', homeContent.reviews?.length || 0);
+    console.log('Brazilian Content:', homeContent.brazilian ? 'Present' : 'Missing');
+    
+    // Log detailed data for each section
+    if (homeContent.heroSlides && homeContent.heroSlides.length > 0) {
+      console.log('--- HERO SLIDES DETAIL ---');
+      homeContent.heroSlides.forEach((slide, index) => {
+        console.log(`Slide ${index + 1}:`, {
+          id: slide.id,
+          hasImage: !!slide.image,
+          titles: slide.titles,
+          showButtons: {
+            certification: slide.showCertificationButton,
+            explore: slide.showExploreButton,
+            discover: slide.showDiscoverButton
+          }
+        });
+      });
+    }
+    
+    if (homeContent.suggestedProducts && homeContent.suggestedProducts.length > 0) {
+      console.log('--- SUGGESTED PRODUCTS DETAIL ---');
+      homeContent.suggestedProducts.forEach((product, index) => {
+        console.log(`Product ${index + 1}:`, {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          hasImage: !!product.image,
+          enabled: product.enabled
+        });
+      });
+    }
+    
+    console.log('=== END HOME CONTENT DATA ===\n');
+    
     res.json(homeContent);
   } catch (error) {
     console.error('Error fetching home content:', error);
@@ -116,20 +160,37 @@ router.get('/', async (req, res) => {
 // Update home content
 router.put('/', async (req, res) => {
   try {
+    console.log('=== UPDATE HOME CONTENT REQUEST ===');
+    console.log('Request body keys:', Object.keys(req.body));
+    
     let homeContent = await HomeContent.findOne();
     
     if (!homeContent) {
       homeContent = new HomeContent();
+      console.log('Created new home content document');
+    } else {
+      console.log('Found existing home content document');
     }
     
-    // Update all fields from request body
+    // Log what's being updated
     Object.keys(req.body).forEach(key => {
-      if (req.body[key] !== undefined) {
-        homeContent[key] = req.body[key];
+      const value = req.body[key];
+      console.log(`Updating ${key}:`, {
+        type: typeof value,
+        isArray: Array.isArray(value),
+        length: Array.isArray(value) ? value.length : 'N/A',
+        sample: Array.isArray(value) && value.length > 0 ? value[0] : value
+      });
+      
+      if (value !== undefined) {
+        homeContent[key] = value;
       }
     });
     
     await homeContent.save();
+    console.log('Home content saved successfully');
+    console.log('=== END UPDATE HOME CONTENT ===\n');
+    
     res.json(homeContent);
   } catch (error) {
     console.error('Error updating home content:', error);
