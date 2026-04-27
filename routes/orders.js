@@ -20,12 +20,16 @@ router.post('/guest', [
   body('shippingMethod').isIn(['home', 'bureau']).withMessage('Invalid shipping method')
 ], async (req, res) => {
   try {
+    console.log('Guest order request body:', req.body);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
     const { items, customerInfo, shippingAddress, paymentMethod, shippingMethod, notes } = req.body;
+    console.log('Extracted order data:', { items, customerInfo, shippingAddress, paymentMethod, shippingMethod, notes });
 
     // Check if all products exist and have sufficient stock
     for (const item of items) {
@@ -38,17 +42,48 @@ router.post('/guest', [
       }
     }
 
+    // Calculate totals
+    const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    
+    // Get real shipping cost based on wilaya and method
+    const shippingPriceController = require('../controllers/shippingController');
+    const shippingPrices = await shippingPriceController.getShippingPrices();
+    const shippingCost = shippingPrices[shippingAddress.wilaya]?.[shippingMethod] || 
+                      (shippingMethod === 'home' ? 600 : 400); // Fallback to default
+    
+    const tax = 0; // No tax for now
+    const total = subtotal + shippingCost + tax;
+
     // Create guest order
+    console.log('Creating order with data:', {
+      customerInfo,
+      items,
+      shippingAddress,
+      paymentMethod,
+      shippingMethod,
+      notes,
+      subtotal,
+      shippingCost,
+      tax,
+      total
+    });
+    
     const order = new Order({
       customerInfo,
       items,
       shippingAddress,
       paymentMethod,
       shippingMethod,
-      notes
+      notes,
+      subtotal,
+      shippingCost,
+      tax,
+      total
     });
 
+    console.log('Order object created, saving...');
     await order.save();
+    console.log('Order saved successfully:', order);
 
     // Update product stock
     for (const item of items) {
@@ -61,7 +96,9 @@ router.post('/guest', [
       data: {
         orderNumber: order.orderNumber,
         total: order.total,
-        shippingCost: order.shippingCost
+        subtotal: order.subtotal,
+        shippingCost: order.shippingCost,
+        tax: order.tax
       }
     });
   } catch (error) {
