@@ -102,14 +102,14 @@ router.post('/upload', upload.array('files'), async (req, res) => {
       const isImage = file.mimetype.startsWith('image/');
       const isVideo = file.mimetype.startsWith('video/');
       
-      // Generate a placeholder URL based on file type
+      // Generate a placeholder URL based on file type using existing assets
       let placeholderUrl;
       if (isImage) {
-        placeholderUrl = `/assets/placeholder-image.jpg`;
+        placeholderUrl = `/assets/ssss.jpg`; // Use existing hero image as placeholder
       } else if (isVideo) {
-        placeholderUrl = `/assets/placeholder-video.mp4`;
+        placeholderUrl = `/media/Green Black and Brown Simple Ayurveda Hair Oil Mobile Video.mp4`; // Use existing video
       } else {
-        placeholderUrl = `/assets/placeholder-file.jpg`;
+        placeholderUrl = `/assets/ssss.jpg`; // Default to image
       }
 
       return {
