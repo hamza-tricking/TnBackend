@@ -5,6 +5,71 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { auth, adminAuth } = require('../middleware/auth');
 
+// Create guest order (no authentication required)
+router.post('/guest', [
+  body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
+  body('items.*.product').isMongoId().withMessage('Invalid product ID'),
+  body('items.*.quantity').isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
+  body('items.*.price').isNumeric().withMessage('Price must be a number'),
+  body('customerInfo.fullName').notEmpty().withMessage('Full name is required'),
+  body('customerInfo.phone').notEmpty().withMessage('Phone number is required'),
+  body('shippingAddress.street').notEmpty().withMessage('Street address is required'),
+  body('shippingAddress.city').notEmpty().withMessage('City is required'),
+  body('shippingAddress.wilaya').notEmpty().withMessage('Wilaya is required'),
+  body('paymentMethod').isIn(['cash_on_delivery']).withMessage('Only cash on delivery is available for guest orders'),
+  body('shippingMethod').isIn(['home', 'bureau']).withMessage('Invalid shipping method')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { items, customerInfo, shippingAddress, paymentMethod, shippingMethod, notes } = req.body;
+
+    // Check if all products exist and have sufficient stock
+    for (const item of items) {
+      const product = await Product.findById(item.product);
+      if (!product || !product.isActive) {
+        return res.status(400).json({ success: false, message: `Product ${item.product} not found or not available` });
+      }
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ success: false, message: `Insufficient stock for product ${product.name}` });
+      }
+    }
+
+    // Create guest order
+    const order = new Order({
+      customerInfo,
+      items,
+      shippingAddress,
+      paymentMethod,
+      shippingMethod,
+      notes
+    });
+
+    await order.save();
+
+    // Update product stock
+    for (const item of items) {
+      await Product.findByIdAndUpdate(item.product, { $inc: { stock: -item.quantity } });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Guest order created successfully',
+      data: {
+        orderNumber: order.orderNumber,
+        total: order.total,
+        shippingCost: order.shippingCost
+      }
+    });
+  } catch (error) {
+    console.error('Error creating guest order:', error);
+    res.status(500).json({ success: false, message: 'Error creating order', error: error.message });
+  }
+});
+
 // Create new order
 router.post('/', auth, [
   body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),

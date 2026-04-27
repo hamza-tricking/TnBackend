@@ -22,7 +22,22 @@ const orderSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false // Optional for guest orders
+  },
+  // Guest customer information
+  customerInfo: {
+    fullName: {
+      type: String,
+      required: function() { return !this.user; } // Required only for guest orders
+    },
+    phone: {
+      type: String,
+      required: function() { return !this.user; }
+    },
+    email: {
+      type: String,
+      required: false
+    }
   },
   orderNumber: {
     type: String,
@@ -39,24 +54,34 @@ const orderSchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    state: {
+    wilaya: {
       type: String,
       required: true
     },
+    baladiya: {
+      type: String,
+      required: false
+    },
     zipCode: {
       type: String,
-      required: true
+      required: false
     },
     country: {
       type: String,
       required: true,
-      default: 'US'
+      default: 'Algeria'
     }
   },
   paymentMethod: {
     type: String,
     required: true,
     enum: ['credit_card', 'debit_card', 'paypal', 'cash_on_delivery']
+  },
+  shippingMethod: {
+    type: String,
+    required: true,
+    enum: ['home', 'bureau'],
+    default: 'home'
   },
   paymentStatus: {
     type: String,
