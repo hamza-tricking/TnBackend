@@ -4,10 +4,46 @@ const HomeContent = require('../models/HomeContent');
 const { auth } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// Configure temporary storage for file uploads
+// Ensure upload directories exist
+const ensureDir = (dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+};
+
+ensureDir(path.join(process.cwd(), 'public', 'uploads'));
+ensureDir(path.join(process.cwd(), 'public', 'uploads', 'images'));
+ensureDir(path.join(process.cwd(), 'public', 'uploads', 'videos'));
+
+// Configure disk storage for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const isImage = file.mimetype.startsWith('image/');
+    const isVideo = file.mimetype.startsWith('video/');
+    
+    let uploadPath;
+    if (isImage) {
+      uploadPath = path.join(process.cwd(), 'public', 'uploads', 'images');
+    } else if (isVideo) {
+      uploadPath = path.join(process.cwd(), 'public', 'uploads', 'videos');
+    } else {
+      uploadPath = path.join(process.cwd(), 'public', 'uploads');
+    }
+    
+    ensureDir(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: storage,
   limits: {
     fileSize: 100 * 1024 * 1024 // 100MB limit
   }
@@ -96,25 +132,19 @@ router.post('/upload', upload.array('files'), async (req, res) => {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
-    // For now, return placeholder URLs since Cloudinary is not configured
-    // In production, you would upload to Cloudinary or another file service
+    // Process uploaded files and return their URLs
     const uploadedFiles = req.files.map(file => {
-      const isImage = file.mimetype.startsWith('image/');
-      const isVideo = file.mimetype.startsWith('video/');
+      // Create URL relative to the public directory
+      const relativePath = path.relative(
+        path.join(process.cwd(), 'public'),
+        file.path
+      );
       
-      // Generate a placeholder URL based on file type using existing assets
-      let placeholderUrl;
-      if (isImage) {
-        placeholderUrl = `/assets/ssss.jpg`; // Use existing hero image as placeholder
-      } else if (isVideo) {
-        placeholderUrl = `/media/Green Black and Brown Simple Ayurveda Hair Oil Mobile Video.mp4`; // Use existing video
-      } else {
-        placeholderUrl = `/assets/ssss.jpg`; // Default to image
-      }
+      const fileUrl = '/' + relativePath.replace(/\\/g, '/'); // Convert to forward slashes
 
       return {
-        url: placeholderUrl,
-        filename: file.originalname,
+        url: fileUrl,
+        filename: file.filename,
         originalName: file.originalname,
         size: file.size,
         mimeType: file.mimetype
@@ -122,12 +152,12 @@ router.post('/upload', upload.array('files'), async (req, res) => {
     });
 
     res.json({ 
-      message: 'Files processed successfully (placeholder mode)', 
+      message: 'Files uploaded successfully', 
       files: uploadedFiles 
     });
   } catch (error) {
-    console.error('Error processing files:', error);
-    res.status(500).json({ message: 'Error processing files', error: error.message });
+    console.error('Error uploading files:', error);
+    res.status(500).json({ message: 'Error uploading files', error: error.message });
   }
 });
 
