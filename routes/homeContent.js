@@ -3,24 +3,42 @@ const router = express.Router();
 const HomeContent = require('../models/HomeContent');
 const { auth } = require('../middleware/auth');
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinary');
 
-// Configure Cloudinary storage for file uploads
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'tn-home-content',
-    resource_type: 'auto', // Automatically detect if image or video
-    public_id: (req, file) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      const ext = file.originalname.split('.').pop();
-      return `file-${uniqueSuffix}.${ext}`;
+// Check if Cloudinary is properly configured
+let cloudinary, CloudinaryStorage;
+try {
+  cloudinary = require('../config/cloudinary');
+  CloudinaryStorage = require('multer-storage-cloudinary');
+} catch (error) {
+  console.log('Cloudinary modules not available, will use fallback');
+}
+
+// Configure storage based on Cloudinary availability
+let upload;
+if (cloudinary && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+  console.log('Using Cloudinary storage');
+  const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'tn-home-content',
+      resource_type: 'auto',
+      public_id: (req, file) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = file.originalname.split('.').pop();
+        return `file-${uniqueSuffix}.${ext}`;
+      }
     }
-  }
-});
-
-const upload = multer({ storage: storage });
+  });
+  upload = multer({ storage: storage });
+} else {
+  console.log('Cloudinary not configured, using memory storage with fallback');
+  upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 100 * 1024 * 1024 // 100MB limit
+    }
+  });
+}
 
 // Get all home content
 router.get('/', async (req, res) => {
@@ -108,9 +126,35 @@ router.post('/upload', upload.array('files'), async (req, res) => {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
-    // Check Cloudinary configuration
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      console.error('Cloudinary environment variables not set - using fallback');
+    // Check if we're using Cloudinary or fallback storage
+    const isCloudinaryConfigured = cloudinary && 
+      process.env.CLOUDINARY_CLOUD_NAME && 
+      process.env.CLOUDINARY_API_KEY && 
+      process.env.CLOUDINARY_API_SECRET;
+
+    if (isCloudinaryConfigured) {
+      console.log('Using Cloudinary storage');
+      
+      // Process uploaded files and return their Cloudinary URLs
+      const uploadedFiles = req.files.map(file => {
+        console.log('Processing file:', file.originalname, 'Path:', file.path);
+        return {
+          url: file.path, // Cloudinary URL is stored in file.path
+          filename: file.filename,
+          originalName: file.originalname,
+          size: file.size,
+          mimeType: file.mimetype
+        };
+      });
+
+      console.log('Files processed:', uploadedFiles);
+
+      res.json({ 
+        message: 'Files uploaded successfully to Cloudinary', 
+        files: uploadedFiles 
+      });
+    } else {
+      console.log('Using fallback storage (Cloudinary not configured)');
       
       // Fallback to local storage URLs
       const uploadedFiles = req.files.map(file => {
@@ -131,32 +175,12 @@ router.post('/upload', upload.array('files'), async (req, res) => {
         };
       });
 
-      return res.json({ 
+      res.json({ 
         message: 'Files processed (Cloudinary not configured - using fallback)', 
         files: uploadedFiles 
       });
     }
-
-    console.log('Cloudinary config check passed');
-
-    // Process uploaded files and return their Cloudinary URLs
-    const uploadedFiles = req.files.map(file => {
-      console.log('Processing file:', file.originalname, 'Path:', file.path);
-      return {
-        url: file.path, // Cloudinary URL is stored in file.path
-        filename: file.filename,
-        originalName: file.originalname,
-        size: file.size,
-        mimeType: file.mimetype
-      };
-    });
-
-    console.log('Files processed:', uploadedFiles);
-
-    res.json({ 
-      message: 'Files uploaded successfully to Cloudinary', 
-      files: uploadedFiles 
-    });
+    
   } catch (error) {
     console.error('Error uploading files:', error);
     console.error('Error details:', error.stack);
