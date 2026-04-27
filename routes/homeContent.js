@@ -249,8 +249,147 @@ router.post('/cleanup', async (req, res) => {
   }
 });
 
-// Upload images/videos for home content
-router.post('/upload', upload.array('files', 10), async (req, res) => {
+// Upload files temporarily (not saved to database)
+router.post('/upload-temp', upload.array('files'), async (req, res) => {
+  try {
+    console.log('=== TEMP UPLOAD REQUEST ===');
+    console.log('Files received:', req.files?.length || 0);
+    
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No files uploaded' });
+    }
+
+    const uploadedFiles = [];
+    
+    for (const file of req.files) {
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+        // Use Cloudinary
+        try {
+          const result = await cloudinary.uploader.upload(file.path, {
+            folder: 'temp_uploads', // Temporary folder
+            resource_type: file.mimetype.startsWith('video/') ? 'video' : 'image',
+            use_filename: true,
+            unique_filename: true
+          });
+          
+          console.log('Temp upload successful:', result.public_id);
+          
+          uploadedFiles.push({
+            url: result.secure_url,
+            publicId: result.public_id,
+            originalName: file.originalname,
+            isTemp: true
+          });
+        } catch (cloudinaryError) {
+          console.error('Cloudinary temp upload error:', cloudinaryError);
+          return res.status(500).json({ message: 'Error uploading to Cloudinary', error: cloudinaryError.message });
+        }
+      } else {
+        // Fallback to local storage with temp path
+        const tempUrl = `/temp-uploads/${Date.now()}_${file.originalname}`;
+        uploadedFiles.push({
+          url: tempUrl,
+          originalName: file.originalname,
+          isTemp: true
+        });
+      }
+    }
+    
+    console.log('Temp upload completed:', uploadedFiles.length, 'files');
+    res.json({ files: uploadedFiles });
+  } catch (error) {
+    console.error('Error in temp upload:', error);
+    res.status(500).json({ message: 'Error uploading files', error: error.message });
+  }
+});
+
+// Finalize uploads (move from temp to permanent)
+router.post('/finalize-uploads', async (req, res) => {
+  try {
+    console.log('=== FINALIZE UPLOADS REQUEST ===');
+    const { tempUrls } = req.body;
+    
+    if (!tempUrls || !Array.isArray(tempUrls)) {
+      return res.status(400).json({ message: 'Invalid temp URLs' });
+    }
+    
+    const finalizedFiles = [];
+    
+    for (const tempUrl of tempUrls) {
+      if (tempUrl.includes('cloudinary')) {
+        // Extract public_id from temp URL
+        const publicId = tempUrl.split('/').pop().split('.')[0];
+        
+        try {
+          // Move from temp_uploads to permanent folder
+          const result = await cloudinary.uploader.rename(
+            `temp_uploads/${publicId}`,
+            `home_content/${publicId}`
+          );
+          
+          finalizedFiles.push({
+            originalUrl: tempUrl,
+            finalUrl: result.secure_url,
+            publicId: result.public_id
+          });
+          
+          console.log('File finalized:', publicId);
+        } catch (error) {
+          console.error('Error finalizing file:', error);
+        }
+      } else {
+        // Handle local files
+        finalizedFiles.push({
+          originalUrl: tempUrl,
+          finalUrl: tempUrl.replace('/temp-uploads/', '/uploads/')
+        });
+      }
+    }
+    
+    res.json({ finalizedFiles });
+  } catch (error) {
+    console.error('Error finalizing uploads:', error);
+    res.status(500).json({ message: 'Error finalizing uploads', error: error.message });
+  }
+});
+
+// Cleanup temporary files
+router.post('/cleanup-temp', async (req, res) => {
+  try {
+    console.log('=== CLEANUP TEMP FILES REQUEST ===');
+    const { tempUrls } = req.body;
+    
+    if (!tempUrls || !Array.isArray(tempUrls)) {
+      return res.status(400).json({ message: 'Invalid temp URLs' });
+    }
+    
+    let deletedCount = 0;
+    
+    for (const tempUrl of tempUrls) {
+      if (tempUrl.includes('cloudinary')) {
+        try {
+          const publicId = getPublicIdFromUrl(tempUrl);
+          if (publicId && publicId.includes('temp_uploads/')) {
+            await cloudinary.uploader.destroy(publicId);
+            deletedCount++;
+            console.log('Deleted temp file:', publicId);
+          }
+        } catch (error) {
+          console.error('Error deleting temp file:', error);
+        }
+      }
+    }
+    
+    console.log('Cleanup completed. Deleted files:', deletedCount);
+    res.json({ deletedCount });
+  } catch (error) {
+    console.error('Error in cleanup:', error);
+    res.status(500).json({ message: 'Error cleaning up files', error: error.message });
+  }
+});
+
+// Upload files for home content (legacy - for backwards compatibility)
+router.post('/upload', upload.array('files'), async (req, res) => {
   try {
     console.log('Upload request received');
     console.log('Files:', req.files);
