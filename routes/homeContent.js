@@ -101,8 +101,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Update home content (protected route)
-router.put('/', auth, async (req, res) => {
+// Update home content
+router.put('/', async (req, res) => {
   try {
     let homeContent = await HomeContent.findOne();
     
@@ -163,7 +163,7 @@ router.post('/upload', upload.array('files'), async (req, res) => {
 });
 
 // Update specific sections
-router.put('/hero', auth, async (req, res) => {
+router.put('/hero', async (req, res) => {
   try {
     const homeContent = await HomeContent.findOne();
     if (!homeContent) {
@@ -180,7 +180,7 @@ router.put('/hero', auth, async (req, res) => {
   }
 });
 
-router.put('/about', auth, async (req, res) => {
+router.put('/about', async (req, res) => {
   try {
     const homeContent = await HomeContent.findOne();
     if (!homeContent) {
@@ -197,7 +197,7 @@ router.put('/about', auth, async (req, res) => {
   }
 });
 
-router.put('/videos', auth, async (req, res) => {
+router.put('/videos', async (req, res) => {
   try {
     const homeContent = await HomeContent.findOne();
     if (!homeContent) {
@@ -214,7 +214,7 @@ router.put('/videos', auth, async (req, res) => {
   }
 });
 
-router.put('/suggested-products', auth, async (req, res) => {
+router.put('/suggested-products', async (req, res) => {
   try {
     const homeContent = await HomeContent.findOne();
     if (!homeContent) {
@@ -231,7 +231,7 @@ router.put('/suggested-products', auth, async (req, res) => {
   }
 });
 
-router.put('/reels', auth, async (req, res) => {
+router.put('/reels', async (req, res) => {
   try {
     const homeContent = await HomeContent.findOne();
     if (!homeContent) {
@@ -248,7 +248,7 @@ router.put('/reels', auth, async (req, res) => {
   }
 });
 
-router.put('/reviews', auth, async (req, res) => {
+router.put('/reviews', async (req, res) => {
   try {
     const homeContent = await HomeContent.findOne();
     if (!homeContent) {
@@ -265,7 +265,7 @@ router.put('/reviews', auth, async (req, res) => {
   }
 });
 
-router.put('/brazilian', auth, async (req, res) => {
+router.put('/brazilian', async (req, res) => {
   try {
     const homeContent = await HomeContent.findOne();
     if (!homeContent) {
