@@ -3,51 +3,24 @@ const router = express.Router();
 const HomeContent = require('../models/HomeContent');
 const { auth } = require('../middleware/auth');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 
-// Ensure upload directories exist
-const ensureDir = (dir) => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-};
-
-ensureDir(path.join(process.cwd(), 'public', 'uploads'));
-ensureDir(path.join(process.cwd(), 'public', 'uploads', 'images'));
-ensureDir(path.join(process.cwd(), 'public', 'uploads', 'videos'));
-
-// Configure disk storage for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const isImage = file.mimetype.startsWith('image/');
-    const isVideo = file.mimetype.startsWith('video/');
-    
-    let uploadPath;
-    if (isImage) {
-      uploadPath = path.join(process.cwd(), 'public', 'uploads', 'images');
-    } else if (isVideo) {
-      uploadPath = path.join(process.cwd(), 'public', 'uploads', 'videos');
-    } else {
-      uploadPath = path.join(process.cwd(), 'public', 'uploads');
+// Configure Cloudinary storage for file uploads
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'tn-home-content',
+    resource_type: 'auto', // Automatically detect if image or video
+    public_id: (req, file) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = file.originalname.split('.').pop();
+      return `file-${uniqueSuffix}.${ext}`;
     }
-    
-    ensureDir(uploadPath);
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
   }
 });
 
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB limit
-  }
-});
+const upload = multer({ storage: storage });
 
 // Get all home content
 router.get('/', async (req, res) => {
@@ -132,28 +105,17 @@ router.post('/upload', upload.array('files'), async (req, res) => {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
-    // Process uploaded files and return their URLs
-    const uploadedFiles = req.files.map(file => {
-      // Get the relative path from the file path
-      const relativePath = path.relative(
-        path.join(process.cwd(), 'public'),
-        file.path
-      );
-      
-      // Return URL pointing to the backend server
-      const fileUrl = `https://dmtart.pro/TnBackend/${relativePath.replace(/\\/g, '/')}`;
-
-      return {
-        url: fileUrl,
-        filename: file.filename,
-        originalName: file.originalname,
-        size: file.size,
-        mimeType: file.mimetype
-      };
-    });
+    // Process uploaded files and return their Cloudinary URLs
+    const uploadedFiles = req.files.map(file => ({
+      url: file.path, // Cloudinary URL is stored in file.path
+      filename: file.filename,
+      originalName: file.originalname,
+      size: file.size,
+      mimeType: file.mimetype
+    }));
 
     res.json({ 
-      message: 'Files uploaded successfully', 
+      message: 'Files uploaded successfully to Cloudinary', 
       files: uploadedFiles 
     });
   } catch (error) {
