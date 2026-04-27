@@ -57,7 +57,7 @@ if (isCloudinaryConfigured && CloudinaryStorage && cloudinary) {
 const uploadFallback = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 200 * 1024 * 1024 // 200MB limit
+    fileSize: 50 * 1024 * 1024 // 50MB limit (matching server.js)
   }
 });
 
@@ -138,7 +138,7 @@ router.put('/', async (req, res) => {
 });
 
 // Upload images/videos for home content
-router.post('/upload', upload.array('files'), async (req, res) => {
+router.post('/upload', upload.array('files', 10), async (req, res) => {
   try {
     console.log('Upload request received');
     console.log('Files:', req.files);
