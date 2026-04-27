@@ -21,7 +21,9 @@ app.use(cors({
     'https://tn-4k58ezjei-benchadimohamedhamza-8679s-projects.vercel.app',
     'http://localhost:3001', // Additional localhost port
     'http://127.0.0.1:3000', // Localhost IP
-    'http://127.0.0.1:3001'  // Localhost IP additional port
+    'http://127.0.0.1:3001',  // Localhost IP additional port
+    'http://localhost:3002', // Additional port
+    'http://127.0.0.1:3002'  // Additional port IP
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -32,7 +34,24 @@ app.use(cors({
 
 // Handle preflight requests explicitly
 app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000', 
+    'https://dmtart.pro', 
+    'https://tn-seven.vercel.app', 
+    'https://tn-4k58ezjei-benchadimohamedhamza-8679s-projects.vercel.app',
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://localhost:3002',
+    'http://127.0.0.1:3002'
+  ];
+  
+  if (allowedOrigins.includes(origin) || origin?.includes('localhost')) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
