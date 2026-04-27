@@ -64,6 +64,11 @@ router.post('/guest', [
     const tax = 0; // No tax for now
     const total = subtotal + shippingCost + tax;
 
+    // Generate order number manually
+    const timestamp = Date.now().toString();
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const orderNumber = `ORD-${timestamp}-${random}`;
+
     // Create guest order
     console.log('Creating order with data:', {
       customerInfo,
@@ -75,7 +80,8 @@ router.post('/guest', [
       subtotal,
       shippingCost,
       tax,
-      total
+      total,
+      orderNumber
     });
     
     const order = new Order({
@@ -88,7 +94,8 @@ router.post('/guest', [
       subtotal,
       shippingCost,
       tax,
-      total
+      total,
+      orderNumber
     });
 
     console.log('Order object created, saving...');
