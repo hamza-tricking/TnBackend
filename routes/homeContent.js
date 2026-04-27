@@ -134,13 +134,14 @@ router.post('/upload', upload.array('files'), async (req, res) => {
 
     // Process uploaded files and return their URLs
     const uploadedFiles = req.files.map(file => {
-      // Create URL relative to the public directory
+      // Get the relative path from the file path
       const relativePath = path.relative(
         path.join(process.cwd(), 'public'),
         file.path
       );
       
-      const fileUrl = '/' + relativePath.replace(/\\/g, '/'); // Convert to forward slashes
+      // Return URL pointing to the backend server
+      const fileUrl = `https://dmtart.pro/TnBackend/${relativePath.replace(/\\/g, '/')}`;
 
       return {
         url: fileUrl,
