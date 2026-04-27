@@ -102,6 +102,7 @@ const productSchema = new mongoose.Schema({
     price: Number,
     regular_price: Number,
     sale_price: Number,
+    before_discount_price: Number,
     attributes: [{
       name: String,
       value: String
