@@ -9,9 +9,22 @@ const {
   deleteFile
 } = require('../controllers/uploadController');
 const cloudinaryConfig = require('../config/cloudinary');
+const multer = require('multer');
 
 // Use fallback upload middleware since Cloudinary exports were changed
-const uploadFallback = cloudinaryConfig.uploadFallback;
+let uploadFallback;
+if (cloudinaryConfig && cloudinaryConfig.uploadFallback) {
+  uploadFallback = cloudinaryConfig.uploadFallback;
+  console.log('Using uploadFallback from cloudinary config');
+} else {
+  console.log('uploadFallback not found, creating new one');
+  uploadFallback = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 200 * 1024 * 1024 // 200MB limit
+    }
+  });
+}
 
 // Image upload routes
 router.post('/image/single', uploadFallback.single('image'), uploadSingleImage);
