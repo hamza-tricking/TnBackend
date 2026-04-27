@@ -3,19 +3,15 @@ const router = express.Router();
 const HomeContent = require('../models/HomeContent');
 const { auth } = require('../middleware/auth');
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinary');
+const path = require('path');
 
-// Configure Cloudinary storage for file uploads
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'tn-home-content',
-    resource_type: 'auto',
-  },
+// Configure temporary storage for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB limit
+  }
 });
-
-const upload = multer({ storage: storage });
 
 // Get all home content
 router.get('/', async (req, res) => {
@@ -100,21 +96,38 @@ router.post('/upload', upload.array('files'), async (req, res) => {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
-    const uploadedFiles = req.files.map(file => ({
-      url: file.path,
-      filename: file.filename,
-      originalName: file.originalname,
-      size: file.size,
-      mimeType: file.mimetype
-    }));
+    // For now, return placeholder URLs since Cloudinary is not configured
+    // In production, you would upload to Cloudinary or another file service
+    const uploadedFiles = req.files.map(file => {
+      const isImage = file.mimetype.startsWith('image/');
+      const isVideo = file.mimetype.startsWith('video/');
+      
+      // Generate a placeholder URL based on file type
+      let placeholderUrl;
+      if (isImage) {
+        placeholderUrl = `/assets/placeholder-image.jpg`;
+      } else if (isVideo) {
+        placeholderUrl = `/assets/placeholder-video.mp4`;
+      } else {
+        placeholderUrl = `/assets/placeholder-file.jpg`;
+      }
+
+      return {
+        url: placeholderUrl,
+        filename: file.originalname,
+        originalName: file.originalname,
+        size: file.size,
+        mimeType: file.mimetype
+      };
+    });
 
     res.json({ 
-      message: 'Files uploaded successfully', 
+      message: 'Files processed successfully (placeholder mode)', 
       files: uploadedFiles 
     });
   } catch (error) {
-    console.error('Error uploading files:', error);
-    res.status(500).json({ message: 'Error uploading files', error: error.message });
+    console.error('Error processing files:', error);
+    res.status(500).json({ message: 'Error processing files', error: error.message });
   }
 });
 
