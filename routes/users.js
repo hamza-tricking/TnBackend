@@ -3,6 +3,7 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { auth, adminAuth } = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
 
 // Register new user
 router.post('/register', [
@@ -78,8 +79,12 @@ router.post('/login', [
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Generate JWT token (you'll need to implement this)
-    const token = 'your-jwt-token-here';
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id, username: user.username, role: user.role },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
 
     res.json({
       message: 'Login successful',
