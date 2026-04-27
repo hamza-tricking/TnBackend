@@ -14,14 +14,22 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://dmtart.pro', 'https://tn-seven.vercel.app', 'https://tn-4k58ezjei-benchadimohamedhamza-8679s-projects.vercel.app'],
+  origin: [
+    'http://localhost:3000', 
+    'https://dmtart.pro', 
+    'https://tn-seven.vercel.app', 
+    'https://tn-4k58ezjei-benchadimohamedhamza-8679s-projects.vercel.app',
+    'http://localhost:3001', // Additional localhost port
+    'http://127.0.0.1:3000', // Localhost IP
+    'http://127.0.0.1:3001'  // Localhost IP additional port
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(morgan('combined'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));

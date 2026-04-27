@@ -53,6 +53,14 @@ if (isCloudinaryConfigured && CloudinaryStorage && cloudinary) {
   upload = cloudinaryConfig.uploadFallback;
 }
 
+// Fallback multer configuration for when Cloudinary is not available
+const uploadFallback = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 200 * 1024 * 1024 // 200MB limit
+  }
+});
+
 // Get all home content
 router.get('/', async (req, res) => {
   try {
