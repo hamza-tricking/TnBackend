@@ -94,7 +94,7 @@ router.put('/', auth, async (req, res) => {
 });
 
 // Upload images/videos for home content
-router.post('/upload', auth, upload.array('files'), async (req, res) => {
+router.post('/upload', upload.array('files'), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'No files uploaded' });
