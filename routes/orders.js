@@ -46,9 +46,19 @@ router.post('/guest', [
     const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
     
     // Get real shipping cost based on wilaya and method
-    const shippingPriceController = require('../controllers/shippingController');
-    const shippingPrices = await shippingPriceController.getShippingPrices();
-    const shippingCost = shippingPrices[shippingAddress.wilaya]?.[shippingMethod] || 
+    const Shipping = require('../models/Shipping');
+    const shippingPrices = await Shipping.getActivePrices();
+    
+    // Convert to object format for easy lookup
+    const pricesObject = {};
+    shippingPrices.forEach(price => {
+      pricesObject[price.wilaya] = {
+        home: price.home,
+        bureau: price.bureau
+      };
+    });
+    
+    const shippingCost = pricesObject[shippingAddress.wilaya]?.[shippingMethod] || 
                       (shippingMethod === 'home' ? 600 : 400); // Fallback to default
     
     const tax = 0; // No tax for now
