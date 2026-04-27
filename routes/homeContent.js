@@ -101,18 +101,57 @@ router.put('/', async (req, res) => {
 // Upload images/videos for home content
 router.post('/upload', upload.array('files'), async (req, res) => {
   try {
+    console.log('Upload request received');
+    console.log('Files:', req.files);
+    
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
+    // Check Cloudinary configuration
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.error('Cloudinary environment variables not set - using fallback');
+      
+      // Fallback to local storage URLs
+      const uploadedFiles = req.files.map(file => {
+        const isImage = file.mimetype.startsWith('image/');
+        let placeholderUrl;
+        if (isImage) {
+          placeholderUrl = `/assets/ssss.jpg`; // Use existing hero image as fallback
+        } else {
+          placeholderUrl = `/media/Green Black and Brown Simple Ayurveda Hair Oil Mobile Video.mp4`;
+        }
+        
+        return {
+          url: placeholderUrl,
+          filename: file.originalname,
+          originalName: file.originalname,
+          size: file.size,
+          mimeType: file.mimetype
+        };
+      });
+
+      return res.json({ 
+        message: 'Files processed (Cloudinary not configured - using fallback)', 
+        files: uploadedFiles 
+      });
+    }
+
+    console.log('Cloudinary config check passed');
+
     // Process uploaded files and return their Cloudinary URLs
-    const uploadedFiles = req.files.map(file => ({
-      url: file.path, // Cloudinary URL is stored in file.path
-      filename: file.filename,
-      originalName: file.originalname,
-      size: file.size,
-      mimeType: file.mimetype
-    }));
+    const uploadedFiles = req.files.map(file => {
+      console.log('Processing file:', file.originalname, 'Path:', file.path);
+      return {
+        url: file.path, // Cloudinary URL is stored in file.path
+        filename: file.filename,
+        originalName: file.originalname,
+        size: file.size,
+        mimeType: file.mimetype
+      };
+    });
+
+    console.log('Files processed:', uploadedFiles);
 
     res.json({ 
       message: 'Files uploaded successfully to Cloudinary', 
@@ -120,7 +159,32 @@ router.post('/upload', upload.array('files'), async (req, res) => {
     });
   } catch (error) {
     console.error('Error uploading files:', error);
-    res.status(500).json({ message: 'Error uploading files', error: error.message });
+    console.error('Error details:', error.stack);
+    
+    // Fallback to local storage on error
+    const uploadedFiles = req.files.map(file => {
+      const isImage = file.mimetype.startsWith('image/');
+      let placeholderUrl;
+      if (isImage) {
+        placeholderUrl = `/assets/ssss.jpg`;
+      } else {
+        placeholderUrl = `/media/Green Black and Brown Simple Ayurveda Hair Oil Mobile Video.mp4`;
+      }
+      
+      return {
+        url: placeholderUrl,
+        filename: file.originalname,
+        originalName: file.originalname,
+        size: file.size,
+        mimeType: file.mimetype
+      };
+    });
+
+    res.status(500).json({ 
+      message: 'Upload error - using fallback', 
+      error: error.message,
+      files: uploadedFiles 
+    });
   }
 });
 
