@@ -8,28 +8,45 @@ const multer = require('multer');
 let cloudinary, CloudinaryStorage;
 try {
   cloudinary = require('../config/cloudinary');
-  CloudinaryStorage = require('multer-storage-cloudinary');
+  // Check if multer-storage-cloudinary is available
+  const cloudinaryStorageModule = require('multer-storage-cloudinary');
+  CloudinaryStorage = cloudinaryStorageModule.CloudinaryStorage || cloudinaryStorageModule.default;
+  console.log('Cloudinary modules loaded successfully');
 } catch (error) {
-  console.log('Cloudinary modules not available, will use fallback');
+  console.log('Cloudinary modules not available, will use fallback:', error.message);
+  cloudinary = null;
+  CloudinaryStorage = null;
 }
 
 // Configure storage based on Cloudinary availability
 let upload;
-if (cloudinary && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+if (cloudinary && CloudinaryStorage && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
   console.log('Using Cloudinary storage');
-  const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-      folder: 'tn-home-content',
-      resource_type: 'auto',
-      public_id: (req, file) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = file.originalname.split('.').pop();
-        return `file-${uniqueSuffix}.${ext}`;
+  try {
+    const storage = new CloudinaryStorage({
+      cloudinary: cloudinary,
+      params: {
+        folder: 'tn-home-content',
+        resource_type: 'auto',
+        public_id: (req, file) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+          const ext = file.originalname.split('.').pop();
+          return `file-${uniqueSuffix}.${ext}`;
+        }
       }
-    }
-  });
-  upload = multer({ storage: storage });
+    });
+    upload = multer({ storage: storage });
+    console.log('Cloudinary storage configured successfully');
+  } catch (error) {
+    console.error('Error configuring Cloudinary storage:', error);
+    console.log('Falling back to memory storage');
+    upload = multer({
+      storage: multer.memoryStorage(),
+      limits: {
+        fileSize: 100 * 1024 * 1024 // 100MB limit
+      }
+    });
+  }
 } else {
   console.log('Cloudinary not configured, using memory storage with fallback');
   upload = multer({
