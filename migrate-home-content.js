@@ -32,6 +32,105 @@ const homeContentData = {
         en: 'Transform your hair care routine with our premium professional products designed for salon-quality results at home.' 
       },
       showCertificationButton: false
+    },
+    {
+      image: '/assets/heroparts/heropart22.webp',
+      titles: { 
+        ar: 'شهادة الخبراء', 
+        fr: 'Certification d\'Expert', 
+        en: 'Expert Certification' 
+      },
+      subtitles: { 
+        ar: 'أتقن مهاراتك', 
+        fr: 'Maîtrisez vos Compétences', 
+        en: 'Master Your Skills' 
+      },
+      descriptions: { 
+        ar: 'انضم إلى برامج التدريب الاحترافية وكن خبيرًا معتمدًا في العناية بالشعر بتقنيات رائدة في الصناعة.', 
+        fr: 'Rejoignez nos programmes de formation professionnelle et devenez un expert certifié en soins capillaires avec des techniques de pointe.', 
+        en: 'Join our professional training programs and become a certified hair care expert with industry-leading techniques.' 
+      },
+      buttonTexts: { 
+        ar: 'احصل على الشهادة', 
+        fr: 'Devenir Certifié', 
+        en: 'Get Certified' 
+      },
+      buttonLink: '/certification',
+      showCertificationButton: true
+    },
+    {
+      image: '/assets/heroparts/heropart3.webp',
+      titles: { 
+        ar: 'منتجات مبتكرة', 
+        fr: 'Produits Innovants', 
+        en: 'Innovative Products' 
+      },
+      subtitles: { 
+        ar: 'العناية بالشعر الثورية', 
+        fr: 'Soins Capillaires Révolutionnaires', 
+        en: 'Revolutionary Hair Care' 
+      },
+      descriptions: { 
+        ar: 'اكتشف تركيباتنا المتطورة التي تقدم نتائج استثنائية لجميع أنواع الشعر والمخاوف.', 
+        fr: 'Découvrez nos formulations de pointe qui offrent des résultats exceptionnels pour tous les types de cheveux et préoccupations.', 
+        en: 'Discover our cutting-edge formulations that deliver exceptional results for all hair types and concerns.' 
+      },
+      buttonTexts: { 
+        ar: 'اكتشف المنتجات الجديدة', 
+        fr: 'Explorer les Nouveaux Produits', 
+        en: 'Explore New Products' 
+      },
+      buttonLink: '/products',
+      showExploreButton: true
+    },
+    {
+      image: '/assets/heroparts/heropart4.jpg',
+      titles: { 
+        ar: 'جودة ممتازة', 
+        fr: 'Qualité Premium', 
+        en: 'Premium Quality' 
+      },
+      subtitles: { 
+        ar: 'نتائج مستوى الصالون', 
+        fr: 'Résultats de Niveau Salon', 
+        en: 'Salon-Grade Results' 
+      },
+      descriptions: { 
+        ar: 'اختبر الفرق مع منتجاتنا الاحترافية التي يثق بها مصففو الشعر حول العالم لنتائج جميلة ومتسقة.', 
+        fr: 'Faites l\'expérience de la différence avec nos produits de qualité professionnelle approuvés par les coiffeurs du monde entier pour des résultats beaux et constants.', 
+        en: 'Experience the difference with our professional-grade products trusted by stylists worldwide for consistent, beautiful results.' 
+      },
+      buttonTexts: { 
+        ar: 'تسوق المجموعة', 
+        fr: 'Boutiquer la Collection', 
+        en: 'Shop Collection' 
+      },
+      buttonLink: '/products'
+    },
+    {
+      image: '/assets/heroparts/heropart55.webp',
+      titles: { 
+        ar: 'لا سيستين غولد ثيرابي', 
+        fr: 'La Cystéine Gold Thérapie', 
+        en: 'La Cystéine Gold Thérapie' 
+      },
+      subtitles: { 
+        ar: 'التحول النهائي للشعر', 
+        fr: 'Transformation Capillaire Ultime', 
+        en: 'Ultimate Hair Transformation' 
+      },
+      descriptions: { 
+        ar: 'اكتشف نظام العلاج الثوري المعزز بالذهب الذي يقدم لمعانًا وقوة ونعومة لا مثالية لشعرك.', 
+        fr: 'Découvrez notre système thérapeutique révolutionnaire infusé d\'or qui offre une brillance, une force et une douceur inégalées à vos cheveux.', 
+        en: 'Discover our revolutionary gold-infused therapy system that delivers unparalleled shine, strength, and smoothness to your hair.' 
+      },
+      buttonTexts: { 
+        ar: 'اكتشف لا سيستين غولد ثيرابي', 
+        fr: 'Découvrir La Cystéine Gold Thérapie', 
+        en: 'Discover La Cystéine Gold Thérapie' 
+      },
+      buttonLink: '/products/la-cysteine-gold-therapie',
+      showDiscoverButton: true
     }
   ],
   
