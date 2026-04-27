@@ -3,7 +3,7 @@ require('dotenv').config();
 const HomeContent = require('./models/HomeContent');
 
 // MongoDB connection
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
+let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
 
 // Fix truncated database name if needed
 if (mongoUri.includes('/tn-shopping>')) {
