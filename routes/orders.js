@@ -302,6 +302,7 @@ router.get('/', auth, adminAuth, async (req, res) => {
 
     const orders = await Order.find({})
       .populate('user', 'username email')
+      .populate('items.product', 'name images')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -319,6 +320,36 @@ router.get('/', auth, adminAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Get all orders error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete order (admin only)
+router.delete('/:id', auth, adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Restore product stock if order is not cancelled
+    if (order.orderStatus !== 'cancelled') {
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(
+          item.product,
+          { $inc: { stock: item.quantity } }
+        );
+      }
+    }
+
+    await Order.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: 'Order deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete order error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
