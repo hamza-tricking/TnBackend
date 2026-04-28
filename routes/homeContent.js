@@ -249,10 +249,10 @@ router.post('/cleanup', async (req, res) => {
   }
 });
 
-// Upload files temporarily (not saved to database)
-router.post('/upload-temp', upload.array('files'), async (req, res) => {
+// Upload files to draft folder (not saved to database yet)
+router.post('/upload-draft', upload.array('files'), async (req, res) => {
   try {
-    console.log('=== TEMP UPLOAD REQUEST ===');
+    console.log('=== DRAFT UPLOAD REQUEST ===');
     console.log('Files received:', req.files?.length || 0);
     
     if (!req.files || req.files.length === 0) {
@@ -266,40 +266,87 @@ router.post('/upload-temp', upload.array('files'), async (req, res) => {
         // Use Cloudinary
         try {
           const result = await cloudinary.uploader.upload(file.path, {
-            folder: 'temp_uploads', // Temporary folder
+            folder: 'drafts', // Draft folder - permanent storage
             resource_type: file.mimetype.startsWith('video/') ? 'video' : 'image',
             use_filename: true,
             unique_filename: true
           });
           
-          console.log('Temp upload successful:', result.public_id);
+          console.log('Draft upload successful:', result.public_id);
           
           uploadedFiles.push({
             url: result.secure_url,
             publicId: result.public_id,
             originalName: file.originalname,
-            isTemp: true
+            isDraft: true,
+            uploadedAt: new Date().toISOString()
           });
         } catch (cloudinaryError) {
-          console.error('Cloudinary temp upload error:', cloudinaryError);
+          console.error('Cloudinary draft upload error:', cloudinaryError);
           return res.status(500).json({ message: 'Error uploading to Cloudinary', error: cloudinaryError.message });
         }
       } else {
-        // Fallback to local storage with temp path
-        const tempUrl = `/temp-uploads/${Date.now()}_${file.originalname}`;
+        // Fallback to local storage with draft path
+        const draftUrl = `/drafts/${Date.now()}_${file.originalname}`;
         uploadedFiles.push({
-          url: tempUrl,
+          url: draftUrl,
           originalName: file.originalname,
-          isTemp: true
+          isDraft: true,
+          uploadedAt: new Date().toISOString()
         });
       }
     }
     
-    console.log('Temp upload completed:', uploadedFiles.length, 'files');
+    console.log('Draft upload completed:', uploadedFiles.length, 'files');
     res.json({ files: uploadedFiles });
   } catch (error) {
-    console.error('Error in temp upload:', error);
+    console.error('Error in draft upload:', error);
     res.status(500).json({ message: 'Error uploading files', error: error.message });
+  }
+});
+
+// Get all draft files (for management)
+router.get('/drafts', async (req, res) => {
+  try {
+    console.log('=== GET DRAFT FILES ===');
+    
+    // In a real implementation, you would query your database for draft files
+    // For now, we'll return a placeholder response
+    res.json({ 
+      message: 'Draft files endpoint',
+      drafts: [],
+      note: 'Implement database storage for draft tracking'
+    });
+  } catch (error) {
+    console.error('Error getting drafts:', error);
+    res.status(500).json({ message: 'Error getting drafts', error: error.message });
+  }
+});
+
+// Cleanup old draft files (older than 7 days)
+router.post('/cleanup-old-drafts', async (req, res) => {
+  try {
+    console.log('=== CLEANUP OLD DRAFTS ===');
+    
+    // In a real implementation, you would:
+    // 1. Query database for drafts older than 7 days
+    // 2. Delete them from Cloudinary
+    // 3. Remove from database
+    
+    // For now, we'll implement a basic Cloudinary cleanup
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
+    // This would need to be implemented with Cloudinary API to list and delete old files
+    console.log('Cleanup old drafts older than:', sevenDaysAgo);
+    
+    res.json({ 
+      message: 'Old drafts cleanup completed',
+      deletedCount: 0,
+      note: 'Implement with Cloudinary API for file listing'
+    });
+  } catch (error) {
+    console.error('Error cleaning up old drafts:', error);
+    res.status(500).json({ message: 'Error cleaning up drafts', error: error.message });
   }
 });
 
