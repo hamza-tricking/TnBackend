@@ -52,7 +52,7 @@ async function uploadVideoToCloudinary(videoPath, folder = 'home-content/videos'
 
 // Function to upload multiple videos
 async function uploadVideos(videos, folder = 'home-content/videos') {
-  console.log(`📤 Starting upload of ${videos.length} videos to Cloudinary...`);
+  console.log(`📤 Processing ${videos.length} videos...`);
   
   const uploadedVideos = await Promise.all(
     videos.map(async (video, index) => {
@@ -60,13 +60,22 @@ async function uploadVideos(videos, folder = 'home-content/videos') {
       
       const uploadedVideo = { ...video };
       
-      if (video.src) {
+      // Check if it's already a Cloudinary URL
+      if (video.src && video.src.includes('cloudinary')) {
+        console.log(`✅ Already a Cloudinary URL, skipping upload: ${video.src}`);
+        uploadedVideo.src = video.src;
+      } else if (video.src) {
         uploadedVideo.src = await uploadVideoToCloudinary(video.src, folder);
       }
       
       // Handle reels with thumbnails
       if (video.thumbnail && video.thumbnail !== video.src) {
-        uploadedVideo.thumbnail = await uploadVideoToCloudinary(video.thumbnail, folder);
+        if (video.thumbnail.includes('cloudinary')) {
+          console.log(`✅ Thumbnail already a Cloudinary URL, skipping upload: ${video.thumbnail}`);
+          uploadedVideo.thumbnail = video.thumbnail;
+        } else {
+          uploadedVideo.thumbnail = await uploadVideoToCloudinary(video.thumbnail, folder);
+        }
       } else if (video.src) {
         // Use same URL for thumbnail if not specified
         uploadedVideo.thumbnail = uploadedVideo.src;
@@ -76,7 +85,7 @@ async function uploadVideos(videos, folder = 'home-content/videos') {
     })
   );
   
-  console.log(`✅ All videos uploaded successfully!`);
+  console.log(`✅ All videos processed successfully!`);
   return uploadedVideos;
 }
 
@@ -300,12 +309,12 @@ const homeContentData = {
   
   videos: [
     {
-      src: '/media/Green Black and Brown Simple Ayurveda Hair Oil Mobile Video.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/videos/ayurvedic_hair_oil_treatment.mp4',
       title: 'Ayurvedic Hair Oil Treatment',
       description: 'Natural ingredients for healthy, beautiful hair'
     },
     {
-      src: '/media/PC.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/videos/professional_hair_care.mp4',
       title: 'Professional Hair Care',
       description: 'Salon-quality treatments at home'
     }
@@ -346,85 +355,85 @@ const homeContentData = {
   
   reels: [
     {
-      src: '/assets/video/aaaaa.mp4',
-      thumbnail: '/assets/video/aaaaa.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/hair_transformation.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/hair_transformation.mp4',
       title: 'Hair Transformation',
       customer: 'Sarah M.',
       enabled: true
     },
     {
-      src: '/assets/video/VID-20250109-WA0000.mp4',
-      thumbnail: '/assets/video/VID-20250109-WA0000.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/golden_shine_treatment.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/golden_shine_treatment.mp4',
       title: 'Golden Shine Treatment',
       customer: 'Maria L.',
       enabled: true
     },
     {
-      src: '/assets/video/VID_20250308_164213_003.mp4',
-      thumbnail: '/assets/video/VID_20250308_164213_003.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/silky_smooth_results.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/silky_smooth_results.mp4',
       title: 'Silky Smooth Results',
       customer: 'Emma K.',
       enabled: true
     },
     {
-      src: '/assets/video/VID_20250920_142015_803.mp4',
-      thumbnail: '/assets/video/VID_20250920_142015_803.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/volume_boost.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/volume_boost.mp4',
       title: 'Volume Boost',
       customer: 'Lisa R.',
       enabled: true
     },
     {
-      src: '/assets/video/VID-20250721-WA0065.mp4',
-      thumbnail: '/assets/video/VID-20250721-WA0065.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/color_protection.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/color_protection.mp4',
       title: 'Color Protection',
       customer: 'Ana P.',
       enabled: true
     },
     {
-      src: '/assets/video/VID_20251128_021236_574.mp4',
-      thumbnail: '/assets/video/VID_20251128_021236_574.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/repair_therapy.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/repair_therapy.mp4',
       title: 'Repair Therapy',
       customer: 'Nina S.',
       enabled: true
     },
     {
-      src: '/assets/video/VID_20251112_140113_571.mp4',
-      thumbnail: '/assets/video/VID_20251112_140113_571.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/deep_conditioning.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/deep_conditioning.mp4',
       title: 'Deep Conditioning',
       customer: 'Julia T.',
       enabled: true
     },
     {
-      src: '/assets/video/VID_20250308_164210_406.mp4',
-      thumbnail: '/assets/video/VID_20250308_164210_406.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/blonde_perfection.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/blonde_perfection.mp4',
       title: 'Blonde Perfection',
       customer: 'Camille D.',
       enabled: true
     },
     {
-      src: '/assets/video/WhatsApp Video 2026-01-04 at 11.03.55 AM.mp4',
-      thumbnail: '/assets/video/WhatsApp Video 2026-01-04 at 11.03.55 AM.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/quick_transform.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/quick_transform.mp4',
       title: 'Quick Transform',
       customer: 'Nadia H.',
       enabled: true
     },
     {
-      src: '/assets/video/VID-20250109-WA0000.mp4',
-      thumbnail: '/assets/video/VID-20250109-WA0000.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/straightening_magic.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/straightening_magic.mp4',
       title: 'Straightening Magic',
       customer: 'Yasmine R.',
       enabled: true
     },
     {
-      src: '/assets/video/VID_20250308_164213_003.mp4',
-      thumbnail: '/assets/video/VID_20250308_164213_003.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/color_protection_v2.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/color_protection_v2.mp4',
       title: 'Color Protection',
       customer: 'Ana P.',
       enabled: true
     },
     {
-      src: '/assets/video/VID_20250920_142015_803.mp4',
-      thumbnail: '/assets/video/VID_20250920_142015_803.mp4',
+      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/gloss_finish.mp4',
+      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/gloss_finish.mp4',
       title: 'Gloss Finish',
       customer: 'Fatima Z.',
       enabled: true
