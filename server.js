@@ -19,6 +19,7 @@ app.use(cors({
     'https://dmtart.pro', 
     'https://tn-seven.vercel.app', 
     'https://tn-4k58ezjei-benchadimohamedhamza-8679s-projects.vercel.app',
+    'https://www.tnshoppingg.com', // Production domain
     'http://localhost:3001', // Additional localhost port
     'http://127.0.0.1:3000', // Localhost IP
     'http://127.0.0.1:3001',  // Localhost IP additional port
@@ -40,6 +41,7 @@ app.options('*', (req, res) => {
     'https://dmtart.pro', 
     'https://tn-seven.vercel.app', 
     'https://tn-4k58ezjei-benchadimohamedhamza-8679s-projects.vercel.app',
+    'https://www.tnshoppingg.com', // Production domain
     'http://localhost:3001',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
