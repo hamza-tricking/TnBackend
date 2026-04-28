@@ -224,9 +224,21 @@ router.get('/', async (req, res) => {
                 badgeColor: product.old_price ? 'bg-red-500' : 'bg-[#A38151]',
                 enabled: true
               };
+            } else {
+              // Return a fallback product if not found
+              console.log('Product not found for ID:', suggestedProduct.productId, 'returning fallback');
+              return {
+                id: suggestedProduct.productId,
+                name: 'Product Not Found',
+                description: 'This product is no longer available',
+                price: 0,
+                image: '/placeholder.jpg',
+                badge: 'Unavailable',
+                badgeColor: 'bg-gray-500',
+                enabled: false
+              };
             }
-            return null;
-          }).filter(Boolean);
+          });
           
           responseContent.suggestedProducts = enrichedProducts;
           console.log('Enriched suggested products for GET response:', enrichedProducts.length);
@@ -304,9 +316,21 @@ router.put('/', async (req, res) => {
                 badgeColor: product.old_price ? 'bg-red-500' : 'bg-[#A38151]',
                 enabled: true
               };
+            } else {
+              // Return a fallback product if not found
+              console.log('Product not found for ID:', suggestedProduct.productId, 'returning fallback in PUT');
+              return {
+                id: suggestedProduct.productId,
+                name: 'Product Not Found',
+                description: 'This product is no longer available',
+                price: 0,
+                image: '/placeholder.jpg',
+                badge: 'Unavailable',
+                badgeColor: 'bg-gray-500',
+                enabled: false
+              };
             }
-            return suggestedProduct;
-          }).filter(Boolean);
+          });
           
           responseContent.suggestedProducts = enrichedProducts;
           console.log('Enriched suggested products for response:', enrichedProducts.length);
