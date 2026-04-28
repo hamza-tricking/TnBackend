@@ -309,12 +309,12 @@ const homeContentData = {
   
   videos: [
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/videos/ayurvedic_hair_oil_treatment.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346224/home-content/videos/Green%20Black%20and%20Brown%20Simple%20Ayurveda%20Hair%20Oil%20Mobile%20Video.mp4',
       title: 'Ayurvedic Hair Oil Treatment',
       description: 'Natural ingredients for healthy, beautiful hair'
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/videos/professional_hair_care.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346243/home-content/videos/PC.mp4',
       title: 'Professional Hair Care',
       description: 'Salon-quality treatments at home'
     }
@@ -355,85 +355,85 @@ const homeContentData = {
   
   reels: [
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/hair_transformation.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/hair_transformation.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346263/home-content/reels/aaaaa.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346263/home-content/reels/aaaaa.mp4',
       title: 'Hair Transformation',
       customer: 'Sarah M.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/golden_shine_treatment.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/golden_shine_treatment.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346278/home-content/reels/VID-20250109-WA0000.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346278/home-content/reels/VID-20250109-WA0000.mp4',
       title: 'Golden Shine Treatment',
       customer: 'Maria L.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/silky_smooth_results.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/silky_smooth_results.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346270/home-content/reels/VID_20250308_164213_003.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346270/home-content/reels/VID_20250308_164213_003.mp4',
       title: 'Silky Smooth Results',
       customer: 'Emma K.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/volume_boost.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/volume_boost.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346274/home-content/reels/VID_20250920_142015_803.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346274/home-content/reels/VID_20250920_142015_803.mp4',
       title: 'Volume Boost',
       customer: 'Lisa R.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/color_protection.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/color_protection.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346269/home-content/reels/VID-20250721-WA0065.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346269/home-content/reels/VID-20250721-WA0065.mp4',
       title: 'Color Protection',
       customer: 'Ana P.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/repair_therapy.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/repair_therapy.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346276/home-content/reels/VID_20251128_021236_574.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346276/home-content/reels/VID_20251128_021236_574.mp4',
       title: 'Repair Therapy',
       customer: 'Nina S.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/deep_conditioning.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/deep_conditioning.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346283/home-content/reels/VID_20251112_140113_571.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346283/home-content/reels/VID_20251112_140113_571.mp4',
       title: 'Deep Conditioning',
       customer: 'Julia T.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/blonde_perfection.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/blonde_perfection.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346269/home-content/reels/VID_20250308_164210_406.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346269/home-content/reels/VID_20250308_164210_406.mp4',
       title: 'Blonde Perfection',
       customer: 'Camille D.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/quick_transform.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/quick_transform.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346270/home-content/reels/WhatsApp%20Video%202026-01-04%20at%2011.03.55%20AM.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346270/home-content/reels/WhatsApp%20Video%202026-01-04%20at%2011.03.55%20AM.mp4',
       title: 'Quick Transform',
       customer: 'Nadia H.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/straightening_magic.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/straightening_magic.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346278/home-content/reels/VID-20250109-WA0000.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346278/home-content/reels/VID-20250109-WA0000.mp4',
       title: 'Straightening Magic',
       customer: 'Yasmine R.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/color_protection_v2.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/color_protection_v2.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346270/home-content/reels/VID_20250308_164213_003.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346270/home-content/reels/VID_20250308_164213_003.mp4',
       title: 'Color Protection',
       customer: 'Ana P.',
       enabled: true
     },
     {
-      src: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/gloss_finish.mp4',
-      thumbnail: 'https://res.cloudinary.com/dlqzvqpk7/video/upload/v1/home-content/reels/gloss_finish.mp4',
+      src: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346274/home-content/reels/VID_20250920_142015_803.mp4',
+      thumbnail: 'https://res.cloudinary.com/ddltz8kza/video/upload/v1777346274/home-content/reels/VID_20250920_142015_803.mp4',
       title: 'Gloss Finish',
       customer: 'Fatima Z.',
       enabled: true
