@@ -226,12 +226,17 @@ router.put('/', async (req, res) => {
       }
     });
     
-    // Enrich suggested products before saving response
-    if (homeContent.suggestedProducts && homeContent.suggestedProducts.length > 0) {
+    await homeContent.save();
+    console.log('Home content saved successfully');
+    
+    // Create a copy for response with enriched suggested products
+    const responseContent = homeContent.toObject();
+    
+    if (responseContent.suggestedProducts && responseContent.suggestedProducts.length > 0) {
       console.log('--- ENRICHING SUGGESTED PRODUCTS FOR RESPONSE ---');
-      console.log('Products to enrich:', homeContent.suggestedProducts);
+      console.log('Products to enrich:', responseContent.suggestedProducts);
       
-      const productIds = homeContent.suggestedProducts.map(p => p.productId).filter(Boolean);
+      const productIds = responseContent.suggestedProducts.map(p => p.productId).filter(Boolean);
       console.log('Product IDs to fetch:', productIds);
       
       if (productIds.length > 0) {
@@ -239,7 +244,7 @@ router.put('/', async (req, res) => {
           const products = await Product.find({ _id: { $in: productIds }, 'isActive': true });
           console.log('Found products:', products.length);
           
-          const enrichedProducts = homeContent.suggestedProducts.map(suggestedProduct => {
+          const enrichedProducts = responseContent.suggestedProducts.map(suggestedProduct => {
             const product = products.find(p => p._id.toString() === suggestedProduct.productId);
             if (product) {
               return {
@@ -256,7 +261,7 @@ router.put('/', async (req, res) => {
             return suggestedProduct;
           }).filter(Boolean);
           
-          homeContent.suggestedProducts = enrichedProducts;
+          responseContent.suggestedProducts = enrichedProducts;
           console.log('Enriched suggested products for response:', enrichedProducts.length);
         } catch (error) {
           console.error('Error enriching products for response:', error);
@@ -264,11 +269,9 @@ router.put('/', async (req, res) => {
       }
     }
     
-    await homeContent.save();
-    console.log('Home content saved successfully');
     console.log('=== END UPDATE HOME CONTENT ===\n');
     
-    res.json(homeContent);
+    res.json(responseContent);
   } catch (error) {
     console.error('Error updating home content:', error);
     res.status(500).json({ message: 'Error updating home content', error: error.message });
