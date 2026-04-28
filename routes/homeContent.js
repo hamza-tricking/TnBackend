@@ -193,6 +193,11 @@ router.get('/', async (req, res) => {
     
     console.log('=== END HOME CONTENT DATA ===\n');
     
+    // Log homeContent before creating copy
+    console.log('Original homeContent suggestedProducts:', homeContent.suggestedProducts);
+    console.log('Type of suggestedProducts:', typeof homeContent.suggestedProducts);
+    console.log('Is array:', Array.isArray(homeContent.suggestedProducts));
+    
     // Create a copy for response with enriched suggested products
     const responseContent = homeContent.toObject();
     
