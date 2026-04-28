@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 const HomeContent = require('./models/HomeContent');
+
+// Check if Cloudinary is properly configured
+const cloudinaryConfig = require('./config/cloudinary');
+const cloudinary = cloudinaryConfig.cloudinary;
+const isCloudinaryConfigured = cloudinaryConfig.isConfigured;
 
 // MongoDB connection
 let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
@@ -9,6 +16,68 @@ let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping
 if (mongoUri.includes('/tn-shopping>')) {
     mongoUri = mongoUri.replace('/tn-shopping>', '/tn-shopping');
     console.log('🔧 Fixed truncated database name in URI');
+}
+
+// Function to upload video to Cloudinary
+async function uploadVideoToCloudinary(videoPath, folder = 'home-content/videos') {
+  if (!isCloudinaryConfigured) {
+    console.log('⚠️  Cloudinary not configured, using local path:', videoPath);
+    return videoPath;
+  }
+
+  try {
+    // Check if file exists locally
+    const fullPath = path.join(__dirname, '..', 'public', videoPath);
+    if (!fs.existsSync(fullPath)) {
+      console.log('⚠️  Local video file not found:', fullPath);
+      return videoPath;
+    }
+
+    console.log(`📤 Uploading video to Cloudinary: ${videoPath}`);
+    
+    const result = await cloudinary.uploader.upload(fullPath, {
+      resource_type: 'video',
+      folder: folder,
+      public_id: path.basename(videoPath, path.extname(videoPath)),
+      format: 'mp4'
+    });
+
+    console.log(`✅ Video uploaded successfully: ${result.secure_url}`);
+    return result.secure_url;
+  } catch (error) {
+    console.error(`❌ Error uploading video ${videoPath}:`, error.message);
+    return videoPath; // Fallback to local path
+  }
+}
+
+// Function to upload multiple videos
+async function uploadVideos(videos, folder = 'home-content/videos') {
+  console.log(`📤 Starting upload of ${videos.length} videos to Cloudinary...`);
+  
+  const uploadedVideos = await Promise.all(
+    videos.map(async (video, index) => {
+      console.log(`📤 Processing video ${index + 1}/${videos.length}: ${video.src}`);
+      
+      const uploadedVideo = { ...video };
+      
+      if (video.src) {
+        uploadedVideo.src = await uploadVideoToCloudinary(video.src, folder);
+      }
+      
+      // Handle reels with thumbnails
+      if (video.thumbnail && video.thumbnail !== video.src) {
+        uploadedVideo.thumbnail = await uploadVideoToCloudinary(video.thumbnail, folder);
+      } else if (video.src) {
+        // Use same URL for thumbnail if not specified
+        uploadedVideo.thumbnail = uploadedVideo.src;
+      }
+      
+      return uploadedVideo;
+    })
+  );
+  
+  console.log(`✅ All videos uploaded successfully!`);
+  return uploadedVideos;
 }
 
 // Current static content from the components
@@ -459,11 +528,28 @@ async function migrateHomeContent() {
     await HomeContent.deleteMany({});
     console.log('✅ Cleared existing content');
 
+    // Upload videos to Cloudinary
+    console.log('📤 Uploading videos to Cloudinary...');
+    const uploadedVideos = await uploadVideos(homeContentData.videos, 'home-content/videos');
+    console.log(`✅ Videos uploaded: ${uploadedVideos.length} videos processed`);
+
+    // Upload reels to Cloudinary
+    console.log('📤 Uploading reels to Cloudinary...');
+    const uploadedReels = await uploadVideos(homeContentData.reels, 'home-content/reels');
+    console.log(`✅ Reels uploaded: ${uploadedReels.length} reels processed`);
+
+    // Update home content with Cloudinary URLs
+    const updatedHomeContentData = {
+      ...homeContentData,
+      videos: uploadedVideos,
+      reels: uploadedReels
+    };
+
     // Insert new home content
-    console.log('📝 Inserting home content...');
-    const homeContent = new HomeContent(homeContentData);
+    console.log('📝 Inserting home content with Cloudinary URLs...');
+    const homeContent = new HomeContent(updatedHomeContentData);
     await homeContent.save();
-    console.log('✅ Home content migrated successfully!');
+    console.log('✅ Home content migrated successfully with Cloudinary URLs!');
 
     console.log('\n📊 Migration Summary:');
     console.log(`- Hero Slides: ${homeContentData.heroSlides.length}`);
