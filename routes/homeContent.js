@@ -226,6 +226,44 @@ router.put('/', async (req, res) => {
       }
     });
     
+    // Enrich suggested products before saving response
+    if (homeContent.suggestedProducts && homeContent.suggestedProducts.length > 0) {
+      console.log('--- ENRICHING SUGGESTED PRODUCTS FOR RESPONSE ---');
+      console.log('Products to enrich:', homeContent.suggestedProducts);
+      
+      const productIds = homeContent.suggestedProducts.map(p => p.productId).filter(Boolean);
+      console.log('Product IDs to fetch:', productIds);
+      
+      if (productIds.length > 0) {
+        try {
+          const products = await Product.find({ _id: { $in: productIds }, 'isActive': true });
+          console.log('Found products:', products.length);
+          
+          const enrichedProducts = homeContent.suggestedProducts.map(suggestedProduct => {
+            const product = products.find(p => p._id.toString() === suggestedProduct.productId);
+            if (product) {
+              return {
+                id: product._id,
+                name: product.name,
+                description: product.description_ar || product.description_fr || product.description_en || '',
+                price: product.price,
+                image: product.images && product.images.length > 0 ? product.images[0].url : '/placeholder.jpg',
+                badge: product.old_price ? 'Sale' : 'Featured',
+                badgeColor: product.old_price ? 'bg-red-500' : 'bg-[#A38151]',
+                enabled: true
+              };
+            }
+            return suggestedProduct;
+          }).filter(Boolean);
+          
+          homeContent.suggestedProducts = enrichedProducts;
+          console.log('Enriched suggested products for response:', enrichedProducts.length);
+        } catch (error) {
+          console.error('Error enriching products for response:', error);
+        }
+      }
+    }
+    
     await homeContent.save();
     console.log('Home content saved successfully');
     console.log('=== END UPDATE HOME CONTENT ===\n');
