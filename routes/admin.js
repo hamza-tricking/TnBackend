@@ -50,7 +50,11 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
           customer: order.customerInfo?.fullName || order.user?.username || 'Unknown',
           amount: order.total,
           status: getOrderStatusText(order.orderStatus),
-          date: new Date(order.createdAt).toLocaleDateString('ar-SA'),
+          date: new Date(order.createdAt).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit' 
+        }),
           orderStatus: order.orderStatus
         }))
       }
