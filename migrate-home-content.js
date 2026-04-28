@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
-const HomeContent = require('./models/HomeContent');
+const { HomeContent } = require('./models/HomeContent');
 
 // Check if Cloudinary is properly configured
 const cloudinaryConfig = require('./config/cloudinary');
