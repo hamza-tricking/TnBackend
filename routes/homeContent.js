@@ -4,6 +4,9 @@ const multer = require('multer');
 const { HomeContent, Draft } = require('../models/HomeContent');
 const { auth } = require('../middleware/auth');
 
+// Import Product model for fetching product details
+const Product = require('../models/Product');
+
 // Check if Cloudinary is properly configured
 const cloudinaryConfig = require('../config/cloudinary');
 const cloudinary = cloudinaryConfig.cloudinary;
@@ -135,17 +138,41 @@ router.get('/', async (req, res) => {
       });
     }
     
+    // Fetch full product data for suggested products
     if (homeContent.suggestedProducts && homeContent.suggestedProducts.length > 0) {
       console.log('--- SUGGESTED PRODUCTS DETAIL ---');
-      homeContent.suggestedProducts.forEach((product, index) => {
-        console.log(`Product ${index + 1}:`, {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          hasImage: !!product.image,
-          enabled: product.enabled
-        });
-      });
+      
+      const productIds = homeContent.suggestedProducts.map(p => p.productId).filter(Boolean);
+      console.log('Product IDs to fetch:', productIds);
+      
+      if (productIds.length > 0) {
+        try {
+          const products = await Product.find({ _id: { $in: productIds }, 'isActive': true });
+          console.log('Found products:', products.length);
+          
+          const enrichedProducts = homeContent.suggestedProducts.map(suggestedProduct => {
+            const product = products.find(p => p._id.toString() === suggestedProduct.productId);
+            if (product) {
+              return {
+                id: product._id,
+                name: product.name,
+                description: product.description_ar || product.description_fr || product.description_en || '',
+                price: product.price,
+                image: product.images && product.images.length > 0 ? product.images[0].url : '/placeholder.jpg',
+                badge: product.old_price ? 'Sale' : 'Featured',
+                badgeColor: product.old_price ? 'bg-red-500' : 'bg-[#A38151]',
+                enabled: true
+              };
+            }
+            return suggestedProduct;
+          }).filter(Boolean);
+          
+          homeContent.suggestedProducts = enrichedProducts;
+          console.log('Enriched suggested products:', enrichedProducts.length);
+        } catch (error) {
+          console.error('Error fetching product details:', error);
+        }
+      }
     }
     
     console.log('=== END HOME CONTENT DATA ===\n');
