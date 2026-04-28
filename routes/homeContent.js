@@ -193,8 +193,11 @@ router.get('/', async (req, res) => {
     
     console.log('=== END HOME CONTENT DATA ===\n');
     
-    // Create a copy for response with enriched suggested products
-    const responseContent = homeContent.toObject();
+    // Create response with enriched suggested products
+    const responseContent = {
+      ...homeContent.toObject(),
+      suggestedProducts: []
+    };
     
     if (homeContent.suggestedProducts && homeContent.suggestedProducts.length > 0) {
       console.log('--- ENRICHING SUGGESTED PRODUCTS FOR GET RESPONSE ---');
@@ -212,7 +215,7 @@ router.get('/', async (req, res) => {
             const product = products.find(p => p._id.toString() === suggestedProduct.productId);
             if (product) {
               return {
-                id: product._id,
+                id: product._id.toString(),
                 name: product.name,
                 description: product.description_ar || product.description_fr || product.description_en || '',
                 price: product.price,
@@ -222,7 +225,7 @@ router.get('/', async (req, res) => {
                 enabled: true
               };
             }
-            return suggestedProduct;
+            return null;
           }).filter(Boolean);
           
           responseContent.suggestedProducts = enrichedProducts;
