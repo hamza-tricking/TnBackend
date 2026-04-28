@@ -1,5 +1,38 @@
 const mongoose = require('mongoose');
 
+// Draft Schema for unsaved content
+const draftSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['heroSlide', 'video', 'product', 'reel', 'review'],
+    required: true
+  },
+  data: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true
+  },
+  files: [{
+    url: String,
+    publicId: String,
+    originalName: String,
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, { timestamps: true });
+
+// Auto-cleanup drafts older than 7 days
+draftSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60 });
+
 // Hero Slide Schema
 const heroSlideSchema = new mongoose.Schema({
   image: {
@@ -174,7 +207,8 @@ const homeContentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Create and export the model
+// Create and export the models
 const HomeContent = mongoose.model('HomeContent', homeContentSchema);
+const Draft = mongoose.model('Draft', draftSchema);
 
-module.exports = HomeContent;
+module.exports = { HomeContent, Draft };

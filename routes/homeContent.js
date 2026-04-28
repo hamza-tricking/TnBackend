@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const HomeContent = require('../models/HomeContent');
-const { auth } = require('../middleware/auth');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const { HomeContent, Draft } = require('../models/HomeContent');
+const { auth } = require('../middleware/auth');
 
 // Check if Cloudinary is properly configured
 const cloudinaryConfig = require('../config/cloudinary');
@@ -305,17 +307,69 @@ router.post('/upload-draft', upload.array('files'), async (req, res) => {
   }
 });
 
+// Save draft content
+router.post('/save-draft', async (req, res) => {
+  try {
+    console.log('=== SAVE DRAFT ===');
+    const { type, data, files } = req.body;
+    
+    if (!type || !data) {
+      return res.status(400).json({ message: 'Type and data are required' });
+    }
+    
+    // Create or update draft
+    const draft = await Draft.findOneAndUpdate(
+      { type },
+      { 
+        type, 
+        data, 
+        files: files || [],
+        updatedAt: new Date()
+      },
+      { upsert: true, new: true }
+    );
+    
+    console.log('Draft saved successfully:', draft._id);
+    res.json({ 
+      message: 'Draft saved successfully',
+      draft: draft
+    });
+  } catch (error) {
+    console.error('Error saving draft:', error);
+    res.status(500).json({ message: 'Error saving draft', error: error.message });
+  }
+});
+
+// Get draft content
+router.get('/draft/:type', async (req, res) => {
+  try {
+    console.log('=== GET DRAFT ===');
+    const { type } = req.params;
+    
+    const draft = await Draft.findOne({ type });
+    
+    if (!draft) {
+      return res.json({ draft: null });
+    }
+    
+    console.log('Draft found:', draft._id);
+    res.json({ draft });
+  } catch (error) {
+    console.error('Error getting draft:', error);
+    res.status(500).json({ message: 'Error getting draft', error: error.message });
+  }
+});
+
 // Get all draft files (for management)
 router.get('/drafts', async (req, res) => {
   try {
-    console.log('=== GET DRAFT FILES ===');
+    console.log('=== GET ALL DRAFTS ===');
     
-    // In a real implementation, you would query your database for draft files
-    // For now, we'll return a placeholder response
+    const drafts = await Draft.find().sort({ updatedAt: -1 });
+    
     res.json({ 
-      message: 'Draft files endpoint',
-      drafts: [],
-      note: 'Implement database storage for draft tracking'
+      message: 'Draft files retrieved',
+      drafts: drafts
     });
   } catch (error) {
     console.error('Error getting drafts:', error);
