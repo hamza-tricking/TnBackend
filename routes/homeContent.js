@@ -67,6 +67,10 @@ const uploadFallback = multer({
 // Get all home content
 router.get('/', async (req, res) => {
   try {
+    console.log('=== GET HOME CONTENT REQUEST ===');
+    console.log('Request query params:', req.query);
+    console.log('Request headers:', req.headers);
+    
     let homeContent = await HomeContent.findOne();
     
     console.log('=== HOME CONTENT DATA ===');
