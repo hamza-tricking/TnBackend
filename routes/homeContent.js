@@ -193,7 +193,47 @@ router.get('/', async (req, res) => {
     
     console.log('=== END HOME CONTENT DATA ===\n');
     
-    res.json(homeContent);
+    // Create a copy for response with enriched suggested products
+    const responseContent = homeContent.toObject();
+    
+    if (responseContent.suggestedProducts && responseContent.suggestedProducts.length > 0) {
+      console.log('--- ENRICHING SUGGESTED PRODUCTS FOR GET RESPONSE ---');
+      console.log('Products to enrich:', responseContent.suggestedProducts);
+      
+      const productIds = responseContent.suggestedProducts.map(p => p.productId).filter(Boolean);
+      console.log('Product IDs to fetch:', productIds);
+      
+      if (productIds.length > 0) {
+        try {
+          const products = await Product.find({ _id: { $in: productIds }, 'isActive': true });
+          console.log('Found products:', products.length);
+          
+          const enrichedProducts = responseContent.suggestedProducts.map(suggestedProduct => {
+            const product = products.find(p => p._id.toString() === suggestedProduct.productId);
+            if (product) {
+              return {
+                id: product._id,
+                name: product.name,
+                description: product.description_ar || product.description_fr || product.description_en || '',
+                price: product.price,
+                image: product.images && product.images.length > 0 ? product.images[0].url : '/placeholder.jpg',
+                badge: product.old_price ? 'Sale' : 'Featured',
+                badgeColor: product.old_price ? 'bg-red-500' : 'bg-[#A38151]',
+                enabled: true
+              };
+            }
+            return suggestedProduct;
+          }).filter(Boolean);
+          
+          responseContent.suggestedProducts = enrichedProducts;
+          console.log('Enriched suggested products for GET response:', enrichedProducts.length);
+        } catch (error) {
+          console.error('Error enriching products for GET response:', error);
+        }
+      }
+    }
+    
+    res.json(responseContent);
   } catch (error) {
     console.error('Error fetching home content:', error);
     res.status(500).json({ message: 'Error fetching home content', error: error.message });
