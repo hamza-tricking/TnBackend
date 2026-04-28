@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const { HomeContent, Draft } = require('../models/HomeContent');
 const { auth } = require('../middleware/auth');
 
@@ -32,7 +34,7 @@ if (isCloudinaryConfigured && CloudinaryStorage && cloudinary) {
     const storage = new CloudinaryStorage({
       cloudinary: cloudinary,
       params: {
-        folder: 'tn-home-content',
+        folder: 'drafts', // ALWAYS use drafts folder for all uploads
         resource_type: 'auto',
         public_id: (req, file) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -42,7 +44,7 @@ if (isCloudinaryConfigured && CloudinaryStorage && cloudinary) {
       }
     });
     upload = multer({ storage: storage });
-    console.log('Cloudinary storage configured successfully');
+    console.log('Cloudinary storage configured successfully - using drafts folder');
   } catch (error) {
     console.error('Error configuring Cloudinary storage:', error);
     console.log('Falling back to memory storage');
@@ -261,40 +263,18 @@ router.post('/upload-draft', upload.array('files'), async (req, res) => {
 
     const uploadedFiles = [];
     
+    // Files are already uploaded to Cloudinary by multer storage
+    // Just return the file information
     for (const file of req.files) {
-      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-        // Use Cloudinary
-        try {
-          const result = await cloudinary.uploader.upload(file.path, {
-            folder: 'drafts', // Draft folder - permanent storage
-            resource_type: file.mimetype.startsWith('video/') ? 'video' : 'image',
-            use_filename: true,
-            unique_filename: true
-          });
-          
-          console.log('Draft upload successful:', result.public_id);
-          
-          uploadedFiles.push({
-            url: result.secure_url,
-            publicId: result.public_id,
-            originalName: file.originalname,
-            isDraft: true,
-            uploadedAt: new Date().toISOString()
-          });
-        } catch (cloudinaryError) {
-          console.error('Cloudinary draft upload error:', cloudinaryError);
-          return res.status(500).json({ message: 'Error uploading to Cloudinary', error: cloudinaryError.message });
-        }
-      } else {
-        // Fallback to local storage with draft path
-        const draftUrl = `/drafts/${Date.now()}_${file.originalname}`;
-        uploadedFiles.push({
-          url: draftUrl,
-          originalName: file.originalname,
-          isDraft: true,
-          uploadedAt: new Date().toISOString()
-        });
-      }
+      console.log('File uploaded to Cloudinary:', file.path);
+      
+      uploadedFiles.push({
+        url: file.path, // Cloudinary URL from multer storage
+        publicId: file.filename, // Cloudinary public_id from multer storage
+        originalName: file.originalname,
+        isDraft: true,
+        uploadedAt: new Date().toISOString()
+      });
     }
     
     console.log('Draft upload completed:', uploadedFiles.length, 'files');
