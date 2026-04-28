@@ -322,13 +322,13 @@ const homeContentData = {
   
   suggestedProducts: [
     {
-      productId: '1'
+      productId: '69ee2726797fd249b62e7222'
     },
     {
-      productId: '2'
+      productId: '69ee2726797fd249b62e7215'
     },
     {
-      productId: '3'
+      productId: '69ee2726797fd249b62e7210'
     }
   ],
   
