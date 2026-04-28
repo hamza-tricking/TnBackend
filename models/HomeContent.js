@@ -103,7 +103,7 @@ const suggestedProductSchema = new mongoose.Schema({
 // Reel Schema
 const reelSchema = new mongoose.Schema({
   src: { type: String, required: true },
-  thumbnail: { type: String, required: true },
+  thumbnail: { type: String, default: '' },
   title: { type: String, required: true },
   customer: { type: String, required: true },
   enabled: { type: Boolean, default: true }
