@@ -4,9 +4,6 @@ const multer = require('multer');
 const { HomeContent, Draft } = require('../models/HomeContent');
 const { auth } = require('../middleware/auth');
 
-// Import Product model for fetching product details
-const Product = require('../models/Product');
-
 // Check if Cloudinary is properly configured
 const cloudinaryConfig = require('../config/cloudinary');
 const cloudinary = cloudinaryConfig.cloudinary;
@@ -67,10 +64,6 @@ const uploadFallback = multer({
 // Get all home content
 router.get('/', async (req, res) => {
   try {
-    console.log('=== GET HOME CONTENT REQUEST ===');
-    console.log('Request query params:', req.query);
-    console.log('Request headers:', req.headers);
-    
     let homeContent = await HomeContent.findOne();
     
     console.log('=== HOME CONTENT DATA ===');
@@ -142,113 +135,22 @@ router.get('/', async (req, res) => {
       });
     }
     
-    // Fetch full product data for suggested products
     if (homeContent.suggestedProducts && homeContent.suggestedProducts.length > 0) {
       console.log('--- SUGGESTED PRODUCTS DETAIL ---');
-      console.log('Original suggested products:', homeContent.suggestedProducts);
-      
-      const productIds = homeContent.suggestedProducts.map(p => p.productId).filter(Boolean);
-      console.log('Product IDs to fetch:', productIds);
-      
-      if (productIds.length > 0) {
-        try {
-          const products = await Product.find({ _id: { $in: productIds }, 'isActive': true });
-          console.log('Found products:', products.length);
-          console.log('Found products details:', products.map(p => ({ id: p._id, name: p.name })));
-          
-          const enrichedProducts = homeContent.suggestedProducts.map(suggestedProduct => {
-            console.log('Processing suggestedProduct:', suggestedProduct);
-            const product = products.find(p => p._id.toString() === suggestedProduct.productId);
-            console.log('Found matching product:', product ? 'YES' : 'NO', 'for ID:', suggestedProduct.productId);
-            
-            if (product) {
-              const enriched = {
-                id: product._id,
-                name: product.name,
-                description: product.description_ar || product.description_fr || product.description_en || '',
-                price: product.price,
-                image: product.images && product.images.length > 0 ? product.images[0].url : '/placeholder.jpg',
-                badge: product.old_price ? 'Sale' : 'Featured',
-                badgeColor: product.old_price ? 'bg-red-500' : 'bg-[#A38151]',
-                enabled: true
-              };
-              console.log('Created enriched product:', enriched);
-              return enriched;
-            }
-            console.log('Returning original suggestedProduct (not found):', suggestedProduct);
-            return suggestedProduct;
-          });
-          
-          console.log('Products before filtering:', enrichedProducts.length);
-          const filteredProducts = enrichedProducts.filter(Boolean);
-          console.log('Products after filtering:', filteredProducts.length);
-          
-          homeContent.suggestedProducts = filteredProducts;
-          console.log('Final enriched suggested products:', filteredProducts.length);
-        } catch (error) {
-          console.error('Error fetching product details:', error);
-        }
-      }
+      homeContent.suggestedProducts.forEach((product, index) => {
+        console.log(`Product ${index + 1}:`, {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          hasImage: !!product.image,
+          enabled: product.enabled
+        });
+      });
     }
     
     console.log('=== END HOME CONTENT DATA ===\n');
     
-    // Create response with enriched suggested products
-    const responseContent = {
-      ...homeContent.toObject(),
-      suggestedProducts: []
-    };
-    
-    if (homeContent.suggestedProducts && homeContent.suggestedProducts.length > 0) {
-      console.log('--- ENRICHING SUGGESTED PRODUCTS FOR GET RESPONSE ---');
-      console.log('Products to enrich:', homeContent.suggestedProducts);
-      
-      const productIds = homeContent.suggestedProducts.map(p => p.productId).filter(Boolean);
-      console.log('Product IDs to fetch:', productIds);
-      
-      if (productIds.length > 0) {
-        try {
-          const products = await Product.find({ _id: { $in: productIds }, 'isActive': true });
-          console.log('Found products:', products.length);
-          
-          const enrichedProducts = homeContent.suggestedProducts.map(suggestedProduct => {
-            const product = products.find(p => p._id.toString() === suggestedProduct.productId);
-            if (product) {
-              return {
-                id: product._id.toString(),
-                name: product.name,
-                description: product.description_ar || product.description_fr || product.description_en || '',
-                price: product.price,
-                image: product.images && product.images.length > 0 ? product.images[0].url : '/placeholder.jpg',
-                badge: product.old_price ? 'Sale' : 'Featured',
-                badgeColor: product.old_price ? 'bg-red-500' : 'bg-[#A38151]',
-                enabled: true
-              };
-            } else {
-              // Return a fallback product if not found
-              console.log('Product not found for ID:', suggestedProduct.productId, 'returning fallback');
-              return {
-                id: suggestedProduct.productId,
-                name: 'Product Not Found',
-                description: 'This product is no longer available',
-                price: 0,
-                image: '/placeholder.jpg',
-                badge: 'Unavailable',
-                badgeColor: 'bg-gray-500',
-                enabled: false
-              };
-            }
-          });
-          
-          responseContent.suggestedProducts = enrichedProducts;
-          console.log('Enriched suggested products for GET response:', enrichedProducts.length);
-        } catch (error) {
-          console.error('Error enriching products for GET response:', error);
-        }
-      }
-    }
-    
-    res.json(responseContent);
+    res.json(homeContent);
   } catch (error) {
     console.error('Error fetching home content:', error);
     res.status(500).json({ message: 'Error fetching home content', error: error.message });
@@ -287,62 +189,9 @@ router.put('/', async (req, res) => {
     
     await homeContent.save();
     console.log('Home content saved successfully');
-    
-    // Create a copy for response with enriched suggested products
-    const responseContent = homeContent.toObject();
-    
-    if (responseContent.suggestedProducts && responseContent.suggestedProducts.length > 0) {
-      console.log('--- ENRICHING SUGGESTED PRODUCTS FOR RESPONSE ---');
-      console.log('Products to enrich:', responseContent.suggestedProducts);
-      
-      const productIds = responseContent.suggestedProducts.map(p => p.productId).filter(Boolean);
-      console.log('Product IDs to fetch:', productIds);
-      
-      if (productIds.length > 0) {
-        try {
-          const products = await Product.find({ _id: { $in: productIds }, 'isActive': true });
-          console.log('Found products:', products.length);
-          
-          const enrichedProducts = responseContent.suggestedProducts.map(suggestedProduct => {
-            const product = products.find(p => p._id.toString() === suggestedProduct.productId);
-            if (product) {
-              return {
-                id: product._id,
-                name: product.name,
-                description: product.description_ar || product.description_fr || product.description_en || '',
-                price: product.price,
-                image: product.images && product.images.length > 0 ? product.images[0].url : '/placeholder.jpg',
-                badge: product.old_price ? 'Sale' : 'Featured',
-                badgeColor: product.old_price ? 'bg-red-500' : 'bg-[#A38151]',
-                enabled: true
-              };
-            } else {
-              // Return a fallback product if not found
-              console.log('Product not found for ID:', suggestedProduct.productId, 'returning fallback in PUT');
-              return {
-                id: suggestedProduct.productId,
-                name: 'Product Not Found',
-                description: 'This product is no longer available',
-                price: 0,
-                image: '/placeholder.jpg',
-                badge: 'Unavailable',
-                badgeColor: 'bg-gray-500',
-                enabled: false
-              };
-            }
-          });
-          
-          responseContent.suggestedProducts = enrichedProducts;
-          console.log('Enriched suggested products for response:', enrichedProducts.length);
-        } catch (error) {
-          console.error('Error enriching products for response:', error);
-        }
-      }
-    }
-    
     console.log('=== END UPDATE HOME CONTENT ===\n');
     
-    res.json(responseContent);
+    res.json(homeContent);
   } catch (error) {
     console.error('Error updating home content:', error);
     res.status(500).json({ message: 'Error updating home content', error: error.message });

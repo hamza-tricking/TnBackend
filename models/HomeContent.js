@@ -88,9 +88,16 @@ const videoContentSchema = new mongoose.Schema({
   description: { type: String, required: true }
 }, { _id: false });
 
-// Suggested Product Schema - simplified to just store product IDs
+// Suggested Product Schema
 const suggestedProductSchema = new mongoose.Schema({
-  productId: { type: String, required: true }
+  id: { type: String, required: true },
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  price: { type: Number, required: true },
+  image: { type: String, required: true },
+  badge: { type: String, required: true },
+  badgeColor: { type: String, required: true },
+  enabled: { type: Boolean, default: true }
 }, { _id: false });
 
 // Reel Schema

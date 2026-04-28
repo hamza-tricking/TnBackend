@@ -322,13 +322,34 @@ const homeContentData = {
   
   suggestedProducts: [
     {
-      productId: '69ee2726797fd249b62e7222'
+      id: '1',
+      name: 'La Cystéine Gold Thérapie',
+      description: 'Professional keratin treatment for damaged hair restoration with advanced formula',
+      price: 32000,
+      image: '/assets/products/la cystéine gold thérapie/20250426_113930.jpg',
+      badge: 'Best-seller',
+      badgeColor: 'bg-[#A38151]',
+      enabled: true
     },
     {
-      productId: '69ee2726797fd249b62e7215'
+      id: '2', 
+      name: 'Luxury Thérapie',
+      description: 'Advanced hair care formula for all hair types with natural ingredients',
+      price: 35000,
+      image: '/assets/products/luxury therapie/1000082172.jpg',
+      badge: 'New',
+      badgeColor: 'bg-green-500',
+      enabled: true
     },
     {
-      productId: '69ee2726797fd249b62e7210'
+      id: '3',
+      name: 'Love White',
+      description: 'Protéine TN White Love Originale Brésilienne.Caractéristiques: Professional formula for hair protection and shine',
+      price: 32000,
+      image: '/assets/products/la cystéine gold thérapie/WhatsApp Image 2026-01-04 at 11.03.55asdasdas AM.jpeg',
+      badge: 'Limited',
+      badgeColor: 'bg-purple-500',
+      enabled: true
     }
   ],
   
