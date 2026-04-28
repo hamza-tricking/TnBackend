@@ -193,19 +193,14 @@ router.get('/', async (req, res) => {
     
     console.log('=== END HOME CONTENT DATA ===\n');
     
-    // Log homeContent before creating copy
-    console.log('Original homeContent suggestedProducts:', homeContent.suggestedProducts);
-    console.log('Type of suggestedProducts:', typeof homeContent.suggestedProducts);
-    console.log('Is array:', Array.isArray(homeContent.suggestedProducts));
-    
     // Create a copy for response with enriched suggested products
     const responseContent = homeContent.toObject();
     
-    if (responseContent.suggestedProducts && responseContent.suggestedProducts.length > 0) {
+    if (homeContent.suggestedProducts && homeContent.suggestedProducts.length > 0) {
       console.log('--- ENRICHING SUGGESTED PRODUCTS FOR GET RESPONSE ---');
-      console.log('Products to enrich:', responseContent.suggestedProducts);
+      console.log('Products to enrich:', homeContent.suggestedProducts);
       
-      const productIds = responseContent.suggestedProducts.map(p => p.productId).filter(Boolean);
+      const productIds = homeContent.suggestedProducts.map(p => p.productId).filter(Boolean);
       console.log('Product IDs to fetch:', productIds);
       
       if (productIds.length > 0) {
@@ -213,7 +208,7 @@ router.get('/', async (req, res) => {
           const products = await Product.find({ _id: { $in: productIds }, 'isActive': true });
           console.log('Found products:', products.length);
           
-          const enrichedProducts = responseContent.suggestedProducts.map(suggestedProduct => {
+          const enrichedProducts = homeContent.suggestedProducts.map(suggestedProduct => {
             const product = products.find(p => p._id.toString() === suggestedProduct.productId);
             if (product) {
               return {
