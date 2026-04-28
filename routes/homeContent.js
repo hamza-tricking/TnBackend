@@ -173,10 +173,14 @@ router.get('/', async (req, res) => {
             }
             console.log('Returning original suggestedProduct (not found):', suggestedProduct);
             return suggestedProduct;
-          }).filter(Boolean);
+          });
           
-          homeContent.suggestedProducts = enrichedProducts;
-          console.log('Final enriched suggested products:', enrichedProducts.length);
+          console.log('Products before filtering:', enrichedProducts.length);
+          const filteredProducts = enrichedProducts.filter(Boolean);
+          console.log('Products after filtering:', filteredProducts.length);
+          
+          homeContent.suggestedProducts = filteredProducts;
+          console.log('Final enriched suggested products:', filteredProducts.length);
         } catch (error) {
           console.error('Error fetching product details:', error);
         }
