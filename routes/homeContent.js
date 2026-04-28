@@ -141,6 +141,7 @@ router.get('/', async (req, res) => {
     // Fetch full product data for suggested products
     if (homeContent.suggestedProducts && homeContent.suggestedProducts.length > 0) {
       console.log('--- SUGGESTED PRODUCTS DETAIL ---');
+      console.log('Original suggested products:', homeContent.suggestedProducts);
       
       const productIds = homeContent.suggestedProducts.map(p => p.productId).filter(Boolean);
       console.log('Product IDs to fetch:', productIds);
@@ -149,11 +150,15 @@ router.get('/', async (req, res) => {
         try {
           const products = await Product.find({ _id: { $in: productIds }, 'isActive': true });
           console.log('Found products:', products.length);
+          console.log('Found products details:', products.map(p => ({ id: p._id, name: p.name })));
           
           const enrichedProducts = homeContent.suggestedProducts.map(suggestedProduct => {
+            console.log('Processing suggestedProduct:', suggestedProduct);
             const product = products.find(p => p._id.toString() === suggestedProduct.productId);
+            console.log('Found matching product:', product ? 'YES' : 'NO', 'for ID:', suggestedProduct.productId);
+            
             if (product) {
-              return {
+              const enriched = {
                 id: product._id,
                 name: product.name,
                 description: product.description_ar || product.description_fr || product.description_en || '',
@@ -163,12 +168,15 @@ router.get('/', async (req, res) => {
                 badgeColor: product.old_price ? 'bg-red-500' : 'bg-[#A38151]',
                 enabled: true
               };
+              console.log('Created enriched product:', enriched);
+              return enriched;
             }
+            console.log('Returning original suggestedProduct (not found):', suggestedProduct);
             return suggestedProduct;
           }).filter(Boolean);
           
           homeContent.suggestedProducts = enrichedProducts;
-          console.log('Enriched suggested products:', enrichedProducts.length);
+          console.log('Final enriched suggested products:', enrichedProducts.length);
         } catch (error) {
           console.error('Error fetching product details:', error);
         }
