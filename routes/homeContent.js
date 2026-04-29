@@ -64,7 +64,8 @@ const uploadFallback = multer({
 // Get all home content
 router.get('/', async (req, res) => {
   try {
-    let homeContent = await HomeContent.findOne();
+    let homeContent = await HomeContent.findOne()
+      .populate('suggestedProducts.productId');
     
     console.log('=== HOME CONTENT DATA ===');
     console.log('Found home content:', homeContent ? 'Yes' : 'No');

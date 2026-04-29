@@ -91,12 +91,20 @@ const videoContentSchema = new mongoose.Schema({
 // Suggested Product Schema
 const suggestedProductSchema = new mongoose.Schema({
   id: { type: String, required: true },
-  name: { type: String, required: true },
-  description: { type: String, required: true },
-  price: { type: Number, required: true },
-  image: { type: String, required: true },
-  badge: { type: String, required: true },
-  badgeColor: { type: String, required: true },
+  // Reference to actual product (optional for backward compatibility)
+  productId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Product',
+    required: false // Optional for backward compatibility
+  },
+  // Display fields (used when productId is not set or for override)
+  name: { type: String, required: false }, // Made optional for productId-based products
+  description: { type: String, required: false }, // Made optional for productId-based products
+  price: { type: Number, required: false }, // Made optional for productId-based products
+  image: { type: String, required: false }, // Made optional for productId-based products
+  // Display configuration
+  badge: { type: String, default: 'New' },
+  badgeColor: { type: String, default: 'bg-blue-500' },
   enabled: { type: Boolean, default: true }
 }, { _id: false });
 
