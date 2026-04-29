@@ -37,8 +37,19 @@ async function updateSuggestedProducts() {
     // Create a map of product names to product IDs for easy lookup
     const productMap = new Map();
     products.forEach(product => {
+      const normalizedName = product.name.toLowerCase()
+        .replace(/[àáâãäå]/g, 'a')
+        .replace(/[èéêë]/g, 'e')
+        .replace(/[ìíîï]/g, 'i')
+        .replace(/[òóôõö]/g, 'o')
+        .replace(/[ùúûü]/g, 'u')
+        .replace(/[ýÿ]/g, 'y')
+        .replace(/[ç]/g, 'c')
+        .replace(/ /g, ' ');
+      
+      productMap.set(normalizedName, product._id);
+      // Also add original name and trimmed version
       productMap.set(product.name.toLowerCase(), product._id);
-      // Also add some variations for matching
       productMap.set(product.name.toLowerCase().trim(), product._id);
     });
 
@@ -53,19 +64,38 @@ async function updateSuggestedProducts() {
     for (const suggestedProduct of homeContent.suggestedProducts || []) {
       console.log(`\n🔄 Processing: ${suggestedProduct.name}`);
       
-      // Try to find matching product
+      // Normalize suggested product name for matching
+      const normalizeName = (name) => {
+        return name.toLowerCase()
+          .replace(/[àáâãäå]/g, 'a')
+          .replace(/[èéêë]/g, 'e')
+          .replace(/[ìíîï]/g, 'i')
+          .replace(/[òóôõö]/g, 'o')
+          .replace(/[ùúûü]/g, 'u')
+          .replace(/[ýÿ]/g, 'y')
+          .replace(/[ç]/g, 'c')
+          .replace(/ /g, ' ');
+      };
+      
+      const normalizedSuggestedName = normalizeName(suggestedProduct.name);
       let matchedProductId = null;
       
-      // Exact match
-      if (productMap.has(suggestedProduct.name.toLowerCase())) {
-        matchedProductId = productMap.get(suggestedProduct.name.toLowerCase());
+      // Exact match with normalized names
+      if (productMap.has(normalizedSuggestedName)) {
+        matchedProductId = productMap.get(normalizedSuggestedName);
         console.log(`✅ Exact match found: ${matchedProductId}`);
+      }
+      // Try original name
+      else if (productMap.has(suggestedProduct.name.toLowerCase())) {
+        matchedProductId = productMap.get(suggestedProduct.name.toLowerCase());
+        console.log(`✅ Original name match found: ${matchedProductId}`);
       }
       // Try partial match
       else {
         const suggestedName = suggestedProduct.name.toLowerCase();
         for (const [productName, productId] of productMap) {
-          if (productName.includes(suggestedName) || suggestedName.includes(productName)) {
+          if (productName.includes(suggestedName) || suggestedName.includes(productName) ||
+              productName.includes(normalizedSuggestedName) || normalizedSuggestedName.includes(productName)) {
             matchedProductId = productId;
             console.log(`✅ Partial match found: ${productName} -> ${matchedProductId}`);
             break;
