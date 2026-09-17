@@ -63,8 +63,23 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// Serve static files from uploads directory with CORS, streaming Range support, and caching
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Range');
+  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+}, express.static(path.join(__dirname, 'public/uploads'), {
+  maxAge: '30d',
+  immutable: true,
+  setHeaders: (res, filePath) => {
+    res.setHeader('Accept-Ranges', 'bytes');
+  }
+}));
 
 // Database connection
 let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tn-shopping';
