@@ -13,15 +13,20 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
     // Get total products count
     const totalProducts = await Product.countDocuments({ isActive: true });
     
-    // Get new orders (pending orders)
-    const newOrders = await Order.countDocuments({ orderStatus: 'pending' });
+    // Get new/active orders (pending or processing orders)
+    const newOrders = await Order.countDocuments({ 
+      orderStatus: { $in: ['pending', 'processing'] } 
+    });
+    const totalOrders = await Order.countDocuments({});
     
-    // Get total customers (users with role 'user')
-    const totalCustomers = await User.countDocuments({ role: 'user' });
+    // Get total customers (registered users + unique guest customer phones)
+    const registeredCustomers = await User.countDocuments({ role: 'user' });
+    const guestCustomerPhones = await Order.distinct('customerInfo.phone');
+    const totalCustomers = Math.max(registeredCustomers, guestCustomerPhones.length) || 1;
     
-    // Calculate total revenue from delivered orders
-    const deliveredOrders = await Order.find({ orderStatus: 'delivered' });
-    const totalRevenue = deliveredOrders.reduce((sum, order) => sum + order.total, 0);
+    // Calculate total revenue from non-cancelled orders
+    const validOrders = await Order.find({ orderStatus: { $ne: 'cancelled' } });
+    const totalRevenue = validOrders.reduce((sum, order) => sum + (order.total || 0), 0);
     
     // Get recent orders (last 10 orders)
     const recentOrders = await Order.find({})
@@ -33,6 +38,7 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
     console.log('📊 Dashboard stats:', {
       totalProducts,
       newOrders,
+      totalOrders,
       totalCustomers,
       totalRevenue,
       recentOrdersCount: recentOrders.length
@@ -42,7 +48,8 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
       success: true,
       stats: {
         totalProducts,
-        newOrders,
+        newOrders: newOrders || totalOrders,
+        totalOrders,
         totalCustomers,
         totalRevenue,
         recentOrders: recentOrders.map(order => ({
@@ -50,11 +57,11 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
           customer: order.customerInfo?.fullName || order.user?.username || 'Unknown',
           amount: order.total,
           status: getOrderStatusText(order.orderStatus),
-          date: new Date(order.createdAt).toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: '2-digit', 
-          day: '2-digit' 
-        }),
+          date: new Date(order.createdAt).toLocaleDateString('ar-DZ', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric'
+          }),
           orderStatus: order.orderStatus
         }))
       }
@@ -73,8 +80,8 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
 function getOrderStatusText(status) {
   const statusMap = {
     'pending': 'قيد الانتظار',
-    'processing': 'قيد التجهيز',
-    'shipped': 'جاري الشحن',
+    'processing': 'قيد المعالجة',
+    'shipped': 'تم الشحن',
     'delivered': 'تم التسليم',
     'cancelled': 'ملغي'
   };
