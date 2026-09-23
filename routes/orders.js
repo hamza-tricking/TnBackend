@@ -272,6 +272,19 @@ router.put('/:id/status', auth, [
   }
 });
 
+// Check Yalidine configuration status (admin only)
+router.get('/yalidine-status', auth, adminAuth, async (req, res) => {
+  const apiId = process.env.YALIDINE_API_ID;
+  const apiToken = process.env.YALIDINE_API_TOKEN;
+  res.json({
+    configured: !!(apiId && apiToken),
+    apiIdSet: !!apiId,
+    apiTokenSet: !!apiToken,
+    // Only show partial credentials for security
+    apiIdPreview: apiId ? `${apiId.slice(0, 6)}...${apiId.slice(-4)}` : null,
+  });
+});
+
 // Push order to Yalidine (admin only)
 router.post('/:id/yalidine', auth, adminAuth, async (req, res) => {
   try {
@@ -285,28 +298,7 @@ router.post('/:id/yalidine', auth, adminAuth, async (req, res) => {
     }
 
     const yalidineService = require('../services/yalidineService');
-    const result = await yalidineService.createParcel(order);
-
-    // Yalidine usually returns the tracking numbers in the success response
-    // For a single parcel, it's typically in the first key or under a specific structure.
-    // e.g. { "tracking_number": { ...success details... } }
-    let trackingNumber = null;
-    if (result && typeof result === 'object' && !result.error) {
-       const keys = Object.keys(result);
-       for (const key of keys) {
-         if (result[key] && result[key].success) {
-           trackingNumber = result[key].tracking || key;
-           break;
-         } else if (key === 'tracking' && typeof result[key] === 'string') {
-           trackingNumber = result[key];
-           break;
-         }
-       }
-       // If tracking number still not found but it's an array
-       if (!trackingNumber && Array.isArray(result) && result[0] && result[0].tracking) {
-           trackingNumber = result[0].tracking;
-       }
-    }
+    const { trackingNumber, rawResponse } = await yalidineService.createParcel(order);
 
     if (trackingNumber) {
       order.trackingNumber = trackingNumber;
@@ -316,8 +308,8 @@ router.post('/:id/yalidine', auth, adminAuth, async (req, res) => {
     res.json({
       success: true,
       message: 'Order sent to Yalidine successfully',
-      trackingNumber: trackingNumber || 'Generated',
-      result
+      trackingNumber: trackingNumber || null,
+      result: rawResponse
     });
   } catch (error) {
     console.error('Push to Yalidine error:', error);
