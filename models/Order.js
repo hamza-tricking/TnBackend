@@ -118,6 +118,10 @@ const orderSchema = new mongoose.Schema({
   notes: {
     type: String,
     maxlength: [500, 'Notes cannot exceed 500 characters']
+  },
+  trackingNumber: {
+    type: String,
+    required: false
   }
 }, {
   timestamps: true

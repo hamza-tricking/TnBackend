@@ -10,7 +10,9 @@ const getShippingPrices = async (req, res) => {
     prices.forEach(price => {
       pricesObject[price.wilaya] = {
         home: price.home,
-        bureau: price.bureau
+        bureau: price.bureau,
+        bureausList: price.bureausList || [],
+        cities: price.cities || []
       };
     });
 
@@ -55,6 +57,8 @@ const getShippingPriceByWilaya = async (req, res) => {
         wilaya: price.wilaya,
         home: price.home,
         bureau: price.bureau,
+        bureausList: price.bureausList || [],
+        cities: price.cities || [],
         isActive: price.isActive,
         notes: price.notes
       }
@@ -73,7 +77,7 @@ const getShippingPriceByWilaya = async (req, res) => {
 const updateShippingPrice = async (req, res) => {
   try {
     const { wilaya } = req.params;
-    const { home, bureau, isActive, notes } = req.body;
+    const { home, bureau, bureausList, cities, isActive, notes } = req.body;
 
     if (!wilaya) {
       return res.status(400).json({
@@ -100,6 +104,8 @@ const updateShippingPrice = async (req, res) => {
     const updateData = {};
     if (home !== undefined) updateData.home = home;
     if (bureau !== undefined) updateData.bureau = bureau;
+    if (bureausList !== undefined) updateData.bureausList = bureausList;
+    if (cities !== undefined) updateData.cities = cities;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (notes !== undefined) updateData.notes = notes;
 

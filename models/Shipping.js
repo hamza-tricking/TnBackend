@@ -1,5 +1,16 @@
 const mongoose = require('mongoose');
 
+const citySchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  hasHome: { type: Boolean, default: true },
+  home: { type: Number, required: false }, // null means inherit wilaya price
+  bureaus: [{
+    name: { type: String, required: true },
+    price: { type: Number, required: true }
+  }],
+  isActive: { type: Boolean, default: true }
+});
+
 const shippingPriceSchema = new mongoose.Schema({
   wilaya: {
     type: String,
@@ -19,6 +30,11 @@ const shippingPriceSchema = new mongoose.Schema({
     min: [0, 'Price cannot be negative'],
     default: 400
   },
+  bureausList: [{
+    name: { type: String, required: true },
+    price: { type: Number, required: true }
+  }],
+  cities: [citySchema],
   isActive: {
     type: Boolean,
     default: true
@@ -47,19 +63,26 @@ shippingPriceSchema.statics.getPriceForWilaya = function(wilaya) {
 
 // Static method to bulk update prices
 shippingPriceSchema.statics.bulkUpdatePrices = function(updates) {
-  const bulkOps = updates.map(update => ({
-    updateOne: {
-      filter: { wilaya: update.wilaya },
-      update: { 
-        $set: {
-          home: update.home,
-          bureau: update.bureau,
-          isActive: update.isActive !== undefined ? update.isActive : true
-        }
-      },
-      upsert: true
-    }
-  }));
+  const bulkOps = updates.map(update => {
+    const setQuery = {
+      home: update.home,
+      bureau: update.bureau,
+      isActive: update.isActive !== undefined ? update.isActive : true
+    };
+    if (update.bureausList !== undefined) setQuery.bureausList = update.bureausList;
+    if (update.cities !== undefined) setQuery.cities = update.cities;
+    if (update.notes !== undefined) setQuery.notes = update.notes;
+
+    return {
+      updateOne: {
+        filter: { wilaya: update.wilaya },
+        update: { 
+          $set: setQuery
+        },
+        upsert: true
+      }
+    };
+  });
   
   return this.bulkWrite(bulkOps);
 };

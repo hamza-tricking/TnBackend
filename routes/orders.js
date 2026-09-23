@@ -272,6 +272,59 @@ router.put('/:id/status', auth, [
   }
 });
 
+// Push order to Yalidine (admin only)
+router.post('/:id/yalidine', auth, adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('items.product', 'name');
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (order.trackingNumber) {
+      return res.status(400).json({ message: 'Order already has a tracking number' });
+    }
+
+    const yalidineService = require('../services/yalidineService');
+    const result = await yalidineService.createParcel(order);
+
+    // Yalidine usually returns the tracking numbers in the success response
+    // For a single parcel, it's typically in the first key or under a specific structure.
+    // e.g. { "tracking_number": { ...success details... } }
+    let trackingNumber = null;
+    if (result && typeof result === 'object' && !result.error) {
+       const keys = Object.keys(result);
+       for (const key of keys) {
+         if (result[key] && result[key].success) {
+           trackingNumber = result[key].tracking || key;
+           break;
+         } else if (key === 'tracking' && typeof result[key] === 'string') {
+           trackingNumber = result[key];
+           break;
+         }
+       }
+       // If tracking number still not found but it's an array
+       if (!trackingNumber && Array.isArray(result) && result[0] && result[0].tracking) {
+           trackingNumber = result[0].tracking;
+       }
+    }
+
+    if (trackingNumber) {
+      order.trackingNumber = trackingNumber;
+      await order.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Order sent to Yalidine successfully',
+      trackingNumber: trackingNumber || 'Generated',
+      result
+    });
+  } catch (error) {
+    console.error('Push to Yalidine error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
+  }
+});
+
 // Update payment status (admin only)
 router.put('/:id/payment', auth, [
   body('paymentStatus').isIn(['pending', 'paid', 'failed', 'refunded']).withMessage('Invalid payment status')
