@@ -1,7 +1,7 @@
 
 
-// Or using native fetch in Node 18+
-const API_URL = 'https://api.yalidine.com/v1';
+// Standard Yalidine API v1 endpoint
+const API_URL = 'https://api.yalidine.app/v1';
 
 class YalidineService {
   constructor() {
