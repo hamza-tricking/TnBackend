@@ -4,7 +4,6 @@ const API_URL = 'https://api.yalidine.app/v1';
 
 // Map from checkout wilaya names → Yalidine exact wilaya names
 const WILAYA_NAME_MAP = {
-  // Direct matches kept, accented variants normalized
   'Adrar': 'Adrar',
   'Chlef': 'Chlef',
   'Laghouat': 'Laghouat',
@@ -13,7 +12,6 @@ const WILAYA_NAME_MAP = {
   'Béjaïa': 'Béjaïa',
   'Bejaia': 'Béjaïa',
   'Bejaïa': 'Béjaïa',
-  'Bejaia': 'Béjaïa',
   'Biskra': 'Biskra',
   'Béchar': 'Béchar',
   'Bechar': 'Béchar',
@@ -68,7 +66,6 @@ const WILAYA_NAME_MAP = {
   'Ghardaïa': 'Ghardaïa',
   'Ghardaia': 'Ghardaïa',
   'Relizane': 'Relizane',
-  // New wilayas (58 total)
   'Timimoun': 'Timimoun',
   'Bordj Badji Mokhtar': 'Bordj Badji Mokhtar',
   'Ouled Djellal': 'Ouled Djellal',
@@ -84,15 +81,49 @@ const WILAYA_NAME_MAP = {
 
 function normalizeWilayaName(name) {
   if (!name) return name;
-  // Direct match
   if (WILAYA_NAME_MAP[name]) return WILAYA_NAME_MAP[name];
-  // Case-insensitive match
   const lower = name.toLowerCase();
   for (const [key, val] of Object.entries(WILAYA_NAME_MAP)) {
     if (key.toLowerCase() === lower) return val;
   }
-  // Return original if no match found
   return name;
+}
+
+/**
+ * Normalize an Algerian phone number to Yalidine-accepted format.
+ * Yalidine accepts: 10-digit numbers starting with 0 (e.g. 0555123456)
+ * or international format +213XXXXXXXXX
+ * We strip all non-digit chars, then ensure it starts with 0 and is 10 digits.
+ */
+function normalizePhone(phone) {
+  if (!phone) return '0000000000';
+
+  // Remove all non-digit characters (spaces, dashes, dots, parens, +)
+  let digits = phone.replace(/\D/g, '');
+
+  // Handle international prefix: 213XXXXXXXXX → 0XXXXXXXXX
+  if (digits.startsWith('213') && digits.length === 12) {
+    digits = '0' + digits.slice(3);
+  }
+  // Handle +213 without the + (already stripped above): same as above
+  if (digits.startsWith('213') && digits.length > 10) {
+    digits = '0' + digits.slice(3);
+  }
+
+  // If still not 10 digits starting with 0, pad or truncate carefully
+  if (!digits.startsWith('0')) {
+    digits = '0' + digits;
+  }
+
+  // Take only the first 10 digits
+  digits = digits.slice(0, 10);
+
+  // Pad with zeros if shorter than 10
+  while (digits.length < 10) {
+    digits += '0';
+  }
+
+  return digits;
 }
 
 class YalidineService {
@@ -130,17 +161,19 @@ class YalidineService {
     const familyname = names.slice(1).join(' ') || '.';
 
     // Normalize wilaya name to match Yalidine's exact list
-    const rawWilaya = order.shippingAddress.wilaya;
-    const normalizedWilaya = normalizeWilayaName(rawWilaya);
+    const normalizedWilaya = normalizeWilayaName(order.shippingAddress.wilaya);
 
-    // Use a unique order_id — append timestamp suffix to avoid conflicts if re-sending
+    // Normalize phone number — Yalidine requires 10-digit Algerian format (0XXXXXXXXX)
+    const normalizedPhone = normalizePhone(order.customerInfo?.phone);
+
+    // Use the order's number as order_id
     const orderId = order.orderNumber || order._id?.toString();
 
     const parcelData = {
       order_id: orderId,
       firstname: firstname,
       familyname: familyname,
-      contact_phone: order.customerInfo?.phone || '0000000000',
+      contact_phone: normalizedPhone,
       address: order.shippingAddress.street || '.',
       to_commune_name: order.shippingAddress.baladiya || order.shippingAddress.city,
       to_wilaya_name: normalizedWilaya,
