@@ -81,6 +81,10 @@ router.get('/', async (req, res) => {
 // Get single product by ID
 router.get('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
     const product = await Product.findById(req.params.id);
     
     if (!product) {
@@ -101,9 +105,8 @@ router.get('/:id', async (req, res) => {
 // Create new product (admin only - you'll need to add auth middleware)
 router.post('/', [
   body('name').notEmpty().withMessage('Product name is required'),
-  body('description').notEmpty().withMessage('Description is required'),
   body('price').isNumeric().withMessage('Price must be a number'),
-  body('category').isIn(['electronics', 'clothing', 'food', 'books', 'home', 'sports', 'other']).withMessage('Invalid category'),
+  body('category').optional().isIn(['hair-care', 'skin-care', 'makeup', 'fragrance', 'health', 'other', 'electronics', 'clothing', 'food', 'books', 'home', 'sports']).withMessage('Invalid category'),
   body('sku').notEmpty().withMessage('SKU is required'),
   body('stock').isInt({ min: 0 }).withMessage('Stock must be a non-negative integer')
 ], async (req, res) => {
@@ -113,7 +116,16 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const product = new Product(req.body);
+    const productData = { ...req.body };
+    // Synchronize description and description_ar
+    if (!productData.description_ar && productData.description) {
+      productData.description_ar = productData.description;
+    }
+    if (!productData.description && productData.description_ar) {
+      productData.description = productData.description_ar;
+    }
+
+    const product = new Product(productData);
     await product.save();
 
     res.status(201).json({
@@ -136,14 +148,23 @@ router.put('/:id', [
   body('stock').optional().isInt({ min: 0 }).withMessage('Stock must be a non-negative integer')
 ], async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
+    const updateData = { ...req.body };
+    if (updateData.description && !updateData.description_ar) {
+      updateData.description_ar = updateData.description;
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -164,6 +185,10 @@ router.put('/:id', [
 // Delete product (admin only - soft delete)
 router.delete('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
