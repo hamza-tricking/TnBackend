@@ -352,6 +352,78 @@ router.put('/:id/payment', auth, [
   }
 });
 
+// Update full order details (admin only)
+router.put('/:id', auth, adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const {
+      customerInfo,
+      shippingAddress,
+      shippingMethod,
+      shippingCost,
+      subtotal,
+      total,
+      orderStatus,
+      paymentStatus,
+      paymentMethod,
+      trackingNumber,
+      notes
+    } = req.body;
+
+    if (customerInfo) {
+      if (!order.customerInfo) order.customerInfo = {};
+      if (customerInfo.fullName !== undefined) order.customerInfo.fullName = customerInfo.fullName;
+      if (customerInfo.phone !== undefined) order.customerInfo.phone = customerInfo.phone;
+      if (customerInfo.email !== undefined) order.customerInfo.email = customerInfo.email;
+    }
+
+    if (shippingAddress) {
+      if (!order.shippingAddress) order.shippingAddress = {};
+      if (shippingAddress.street !== undefined) order.shippingAddress.street = shippingAddress.street;
+      if (shippingAddress.city !== undefined) order.shippingAddress.city = shippingAddress.city;
+      if (shippingAddress.wilaya !== undefined) order.shippingAddress.wilaya = shippingAddress.wilaya;
+      if (shippingAddress.baladiya !== undefined) order.shippingAddress.baladiya = shippingAddress.baladiya;
+      if (shippingAddress.zipCode !== undefined) order.shippingAddress.zipCode = shippingAddress.zipCode;
+      if (shippingAddress.country !== undefined) order.shippingAddress.country = shippingAddress.country;
+    }
+
+    if (shippingMethod !== undefined) order.shippingMethod = shippingMethod;
+    if (shippingCost !== undefined && !isNaN(shippingCost)) order.shippingCost = Number(shippingCost);
+    if (subtotal !== undefined && !isNaN(subtotal)) order.subtotal = Number(subtotal);
+    if (total !== undefined && !isNaN(total)) {
+      order.total = Number(total);
+    } else if (shippingCost !== undefined || subtotal !== undefined) {
+      order.total = (order.subtotal || 0) + (order.shippingCost || 0) + (order.tax || 0);
+    }
+
+    if (orderStatus !== undefined) order.orderStatus = orderStatus;
+    if (paymentStatus !== undefined) order.paymentStatus = paymentStatus;
+    if (paymentMethod !== undefined) order.paymentMethod = paymentMethod;
+    if (trackingNumber !== undefined) order.trackingNumber = trackingNumber;
+    if (notes !== undefined) order.notes = notes;
+
+    await order.save();
+
+    const populatedOrder = await Order.findById(order._id)
+      .populate('user', 'username email')
+      .populate('items.product', 'name images');
+
+    res.json({
+      success: true,
+      message: 'Order updated successfully',
+      order: populatedOrder
+    });
+  } catch (error) {
+    console.error('Update order error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
+  }
+});
+
+
 // Cancel order (user can cancel their own pending orders)
 router.put('/:id/cancel', auth, async (req, res) => {
   try {
