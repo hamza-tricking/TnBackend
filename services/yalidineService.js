@@ -89,6 +89,123 @@ function normalizeWilayaName(name) {
   return name;
 }
 
+let communesByWilaya = {};
+try {
+  communesByWilaya = require('../data/yalidineCommunesByWilaya.json');
+} catch (e) {
+  console.warn('Could not load local yalidineCommunesByWilaya.json:', e.message);
+}
+
+const ARABIC_WILAYA_MAP = {
+  'الجزائر': 'Alger Centre',
+  'وهران': 'Oran',
+  'قسنطينة': 'Constantine',
+  'سطيف': 'Sétif',
+  'عنابة': 'Annaba',
+  'البليدة': 'Blida',
+  'تلمسان': 'Tlemcen',
+  'باتنة': 'Batna',
+  'بجاية': 'Béjaïa',
+  'بسكرة': 'Biskra',
+  'تيزي وزو': 'Tizi Ouzou',
+  'بومرداس': 'Boumerdes',
+  'تيبازة': 'Tipaza',
+  'الشلف': 'Chlef',
+  'مستغانم': 'Mostaganem',
+  'برج بوعريريج': 'Bordj Bou Arreridj',
+  'المدية': 'Médéa',
+  'عين الدفلى': 'Aïn Defla',
+  'جيجل': 'Jijel',
+  'سكيكدة': 'Skikda',
+  'قالمة': 'Guelma',
+  'ورقلة': 'Ouargla',
+  'الوادي': 'El Oued',
+  'غرداية': 'Ghardaïa',
+  'خنشلة': 'Khenchela',
+  'سوق أهراس': 'Souk Ahras',
+  'ميلة': 'Mila',
+  'عين تموشنت': 'Aïn Témouchent',
+  'غليزان': 'Relizane',
+  'تيارت': 'Tiaret',
+  'الأغواط': 'Laghouat',
+  'المسيلة': "M'Sila",
+  'معسكر': 'Mascara',
+  'تبسة': 'Tébessa',
+  'سعيدة': 'Saïda',
+  'تيسمسيلت': 'Tissemsilt',
+  'الطارف': 'El Tarf',
+  'تندوف': 'Tindouf',
+  'أدرار': 'Adrar',
+  'بشار': 'Béchar',
+  'تمنراست': 'Tamanrasset',
+  'إليزي': 'Illizi',
+  'تيميمون': 'Timimoun',
+  'برج باجي مختار': 'Bordj Badji Mokhtar',
+  'أولاد جلال': 'Ouled Djellal',
+  'بني عباس': 'Béni Abbès',
+  'عين صالح': 'In Salah',
+  'عين قزام': 'In Guezzam',
+  'تقرت': 'Touggourt',
+  'جانت': 'Djanet',
+  'المغير': "El M'Ghair",
+  'المنيعة': 'El Menia'
+};
+
+function stripAccents(str) {
+  if (!str) return '';
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function normalizeCommuneName(inputCommune, normalizedWilaya) {
+  const communes = communesByWilaya[normalizedWilaya] || [];
+  if (communes.length === 0) return inputCommune || normalizedWilaya;
+
+  // Determine default chef-lieu commune for this wilaya
+  let defaultCommune = communes.find(c => stripAccents(c) === stripAccents(normalizedWilaya));
+  if (!defaultCommune) {
+    if (normalizedWilaya === 'Alger') defaultCommune = 'Alger Centre';
+    else defaultCommune = communes[0];
+  }
+
+  if (!inputCommune || !inputCommune.trim()) {
+    return defaultCommune;
+  }
+
+  const raw = inputCommune.trim();
+
+  // Arabic match
+  if (ARABIC_WILAYA_MAP[raw]) {
+    const arabMatch = ARABIC_WILAYA_MAP[raw];
+    const found = communes.find(c => stripAccents(c) === stripAccents(arabMatch));
+    if (found) return found;
+    if (arabMatch === 'Alger Centre' && normalizedWilaya === 'Alger') return 'Alger Centre';
+  }
+
+  // Exact match
+  if (communes.includes(raw)) return raw;
+
+  const strippedInput = stripAccents(raw);
+
+  // If input matches wilaya name (e.g. 'Alger' or 'alger')
+  if (strippedInput === stripAccents(normalizedWilaya)) {
+    return defaultCommune;
+  }
+
+  // Accent-insensitive / Case-insensitive match
+  const caseMatch = communes.find(c => stripAccents(c) === strippedInput);
+  if (caseMatch) return caseMatch;
+
+  // Substring match
+  const subMatch = communes.find(c => {
+    const sc = stripAccents(c);
+    return sc.includes(strippedInput) || strippedInput.includes(sc);
+  });
+  if (subMatch) return subMatch;
+
+  // Fallback to default chef-lieu
+  return defaultCommune;
+}
+
 /**
  * Normalize an Algerian phone number to Yalidine-accepted format.
  * Yalidine accepts: 10-digit numbers starting with 0 (e.g. 0555123456)
@@ -169,13 +286,19 @@ class YalidineService {
     // Use the order's number as order_id
     const orderId = order.orderNumber || order._id?.toString();
 
+    // Normalize commune name to guarantee Yalidine recognizes it
+    const normalizedCommune = normalizeCommuneName(
+      order.shippingAddress.baladiya || order.shippingAddress.city,
+      normalizedWilaya
+    );
+
     const parcelData = {
       order_id: orderId,
       firstname: firstname,
       familyname: familyname,
       contact_phone: normalizedPhone,
-      address: order.shippingAddress.street || '.',
-      to_commune_name: order.shippingAddress.baladiya || order.shippingAddress.city,
+      address: order.shippingAddress.street || order.shippingAddress.baladiya || normalizedCommune || '.',
+      to_commune_name: normalizedCommune,
       to_wilaya_name: normalizedWilaya,
       product_list: order.items.map(item => {
         const prodName = item.product?.name || (typeof item.product === 'string' ? item.product : 'Product');
