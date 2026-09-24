@@ -283,8 +283,21 @@ class YalidineService {
     // Normalize phone number — Yalidine requires 10-digit Algerian format (0XXXXXXXXX)
     const normalizedPhone = normalizePhone(order.customerInfo?.phone);
 
-    // Use the order's number as order_id
-    const orderId = order.orderNumber || order._id?.toString();
+    // Format product list including variation name (size, volume, etc.)
+    const productList = order.items.map(item => {
+      const prodName = item.product?.name || (typeof item.product === 'string' ? item.product : 'Product');
+      let varName = item.variation?.description || item.variation?.name;
+      if (!varName && order.notes) {
+        const match = order.notes.match(/(?:الخيار|الحجم|النوع|variant|variation)\s*:\s*([^\n\r]+)/i);
+        if (match && match[1]) {
+          varName = match[1].trim();
+        }
+      }
+      return `${item.quantity}x ${prodName}${varName ? ` (${varName})` : ''}`;
+    }).join(', ').slice(0, 250);
+
+    // Use product list with variation as order_id so Yalidine displays it as #commande
+    const orderId = productList ? productList.slice(0, 100) : (order.orderNumber || order._id?.toString());
 
     // Normalize commune name to guarantee Yalidine recognizes it
     const normalizedCommune = normalizeCommuneName(
@@ -300,17 +313,7 @@ class YalidineService {
       address: order.shippingAddress.street || order.shippingAddress.baladiya || normalizedCommune || '.',
       to_commune_name: normalizedCommune,
       to_wilaya_name: normalizedWilaya,
-      product_list: order.items.map(item => {
-        const prodName = item.product?.name || (typeof item.product === 'string' ? item.product : 'Product');
-        let varName = item.variation?.description || item.variation?.name;
-        if (!varName && order.notes) {
-          const match = order.notes.match(/(?:الخيار|الحجم|النوع|variant|variation)\s*:\s*([^\n\r]+)/i);
-          if (match && match[1]) {
-            varName = match[1].trim();
-          }
-        }
-        return `${item.quantity}x ${prodName}${varName ? ` (${varName})` : ''}`;
-      }).join(', ').slice(0, 250),
+      product_list: productList,
       price: order.total,
       freeshipping: false,
       is_stopdesk: isStopdesk,
