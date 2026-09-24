@@ -134,12 +134,33 @@ const orderSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Static method to generate clean, short order number in format: TN-DDMM-XXX (e.g. TN-2409-001)
+orderSchema.statics.generateOrderNumber = async function() {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const prefix = `TN-${day}${month}`;
+
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+  const count = await this.countDocuments({
+    createdAt: { $gte: startOfDay, $lt: endOfDay }
+  });
+
+  let seq = count + 1;
+  let orderNumber = `${prefix}-${String(seq).padStart(3, '0')}`;
+  while (await this.exists({ orderNumber })) {
+    seq++;
+    orderNumber = `${prefix}-${String(seq).padStart(3, '0')}`;
+  }
+  return orderNumber;
+};
+
 // Generate unique order number
 orderSchema.pre('save', async function(next) {
   if (!this.orderNumber) {
-    const timestamp = Date.now().toString();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    this.orderNumber = `ORD-${timestamp}-${random}`;
+    this.orderNumber = await this.constructor.generateOrderNumber();
   }
   next();
 });

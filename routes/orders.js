@@ -64,10 +64,8 @@ router.post('/guest', [
     const tax = 0; // No tax for now
     const total = subtotal + shippingCost + tax;
 
-    // Generate order number manually
-    const timestamp = Date.now().toString();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    const orderNumber = `ORD-${timestamp}-${random}`;
+    // Generate clean, short order number: TN-DDMM-XXX (e.g. TN-2409-001)
+    const orderNumber = await Order.generateOrderNumber();
 
     // Create guest order
     console.log('Creating order with data:', {
