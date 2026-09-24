@@ -177,7 +177,17 @@ class YalidineService {
       address: order.shippingAddress.street || '.',
       to_commune_name: order.shippingAddress.baladiya || order.shippingAddress.city,
       to_wilaya_name: normalizedWilaya,
-      product_list: order.items.map(item => `${item.quantity}x ${item.product?.name || 'Product'}`).join(', '),
+      product_list: order.items.map(item => {
+        const prodName = item.product?.name || (typeof item.product === 'string' ? item.product : 'Product');
+        let varName = item.variation?.description || item.variation?.name;
+        if (!varName && order.notes) {
+          const match = order.notes.match(/(?:الخيار|الحجم|النوع|variant|variation)\s*:\s*([^\n\r]+)/i);
+          if (match && match[1]) {
+            varName = match[1].trim();
+          }
+        }
+        return `${item.quantity}x ${prodName}${varName ? ` (${varName})` : ''}`;
+      }).join(', ').slice(0, 250),
       price: order.total,
       freeshipping: false,
       is_stopdesk: isStopdesk,

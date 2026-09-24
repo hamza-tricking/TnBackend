@@ -48,7 +48,7 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
       success: true,
       stats: {
         totalProducts,
-        newOrders: newOrders || totalOrders,
+        newOrders,
         totalOrders,
         totalCustomers,
         totalRevenue,

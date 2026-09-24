@@ -15,6 +15,13 @@ const orderItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: [0, 'Price cannot be negative']
+  },
+  variation: {
+    id: { type: Number },
+    name: { type: String },
+    description: { type: String },
+    sku: { type: String },
+    attributes: [mongoose.Schema.Types.Mixed]
   }
 });
 
