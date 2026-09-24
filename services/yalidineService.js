@@ -313,7 +313,7 @@ class YalidineService {
       address: order.shippingAddress.street || order.shippingAddress.baladiya || normalizedCommune || '.',
       to_commune_name: normalizedCommune,
       to_wilaya_name: normalizedWilaya,
-      product_list: '',
+      product_list: order.orderNumber || (order._id ? `TN-${order._id.toString().slice(-6).toUpperCase()}` : 'TN-ORDER'),
       price: order.total,
       freeshipping: false,
       is_stopdesk: isStopdesk,
